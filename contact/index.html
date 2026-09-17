@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact — Trovesites</title>
+  <link rel="preconnect" href="https://framerusercontent.com">
+  <link rel="stylesheet" href="../styles.css">
+  <link rel="stylesheet" href="../signin-modal.css">
+  <link rel="stylesheet" href="contact.css">
+</head>
+<body class="contact-page">
+  <header class="site-header">
+    <a class="identity" href="../index.html" aria-label="Trovesites home">
+      <img src="../assets/trovesites-logo.jpg" alt="Trovesites">
+      <span>Trovesites</span>
+    </a>
+    <nav class="main-nav" aria-label="Main navigation">
+      <a href="../index.html#portfolio">Libraries</a>
+      <a href="../pricing/index.html">Pricing</a>
+      <a href="../about/index.html">About us</a>
+      <a href="./index.html">Contact us</a>
+    </nav>
+    <div class="header-actions">
+      <div class="socials" aria-label="Social links">
+        <a href="#dribbble" aria-label="Dribbble">◈</a>
+        <a href="#x" aria-label="X">X</a>
+        <a href="#instagram" aria-label="Instagram">◎</a>
+      </div>
+      <a class="contact-button signin-trigger" href="#signin">Sign in</a>
+    </div>
+    <button class="mobile-filter-trigger" type="button" aria-label="Open filters">☰</button>
+  </header>
+
+  <main>
+    <div class="grid-backdrop" aria-hidden="true"></div>
+    <aside class="filter-panel" aria-label="Portfolio filters">
+      <div class="search-box">
+        <label>Search agents</label>
+        <div class="search-input-wrap"><span aria-hidden="true">⌕</span></div>
+      </div>
+      <section class="filter-section">
+        <h2>Categories</h2>
+        <a class="filter-link" href="../index.html">Templates</a>
+        <a class="filter-link" href="../index.html">Components</a>
+        <a class="filter-link" href="../index.html">Sections</a>
+        <a class="filter-link" href="../index.html">Backgrounds</a>
+        <a class="filter-link" href="../index.html">Branding</a>
+        <a class="filter-link" href="../index.html">Automations</a>
+      </section>
+      <section class="filter-section">
+        <h2>Tags</h2>
+        <div class="tag-list">
+          <button type="button">NO-CODE</button><button type="button">UI KIT</button><button type="button">LOGO</button>
+          <button type="button">CONCEPT ART</button><button type="button">AI PROMPT</button><button type="button">STOCK PHOTO</button>
+          <button type="button">TEMPLATE</button><button type="button">PRINT</button>
+        </div>
+      </section>
+      <section class="filter-section agency-work">
+        <h2>Latest agency work</h2>
+        <article><img src="https://framerusercontent.com/images/S1XoYBF0d1PDfj6sBXkfCybfEQ.png?width=1402&height=1122" alt="Luxury stay branding preview"><div><strong>Client: Luxury Stay branding</strong><small>JULY 15, 2026</small></div></article>
+        <article><img src="https://framerusercontent.com/images/qyI8WIzV0dnYvgWN6icaU57A0.png?width=1536&height=1024" alt="Digital art series preview"><div><strong>Digital Art Series</strong><small>JULY 22, 2026</small></div></article>
+      </section>
+      <div class="sidebar-actions"><a href="./index.html">Contact us</a><a class="signin-trigger" href="#signin">Sign in</a></div>
+    </aside>
+
+    <section class="contact-main">
+    <section class="contact-intro">
+      <span class="eyebrow">Say hello</span>
+      <h1>Contact</h1>
+      <p>The fastest way to reach me is <a href="mailto:hello@trovesites.com">email</a> — hello@trovesites.com<br>
+        I usually reply within a day or two. You can also find me on <a href="#instagram">Instagram</a> or <a href="#x">X</a> for a quicker hello.
+      </p>
+    </section>
+
+    <form class="contact-form" action="#" method="post">
+      <label>First Name*<input name="firstName" type="text" placeholder="John" required></label>
+      <label>Last Name*<input name="lastName" type="text" placeholder="Smith" required></label>
+      <label>Category<select name="category"><option value="">Select</option><option>Templates</option><option>Components</option><option>Sections</option><option>Backgrounds</option><option>Branding</option><option>Automations</option></select></label>
+      <label>Email<input name="email" type="email" placeholder="john@email.com"></label>
+      <label class="message-field">Message<textarea name="message" placeholder="Enter your message....."></textarea></label>
+      <button class="submit-button" type="submit">Send message</button>
+    </form>
+    </section>
+  </main>
+</body>
+<script src="../transitions.js"></script>
+<script src="../signin-modal.js"></script>
+</html>

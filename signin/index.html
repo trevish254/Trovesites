@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Solace — Sign in</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="signin.css">
+</head>
+<body>
+  <main class="signin-scene" id="scene">
+    <div class="signin-center">
+      <section class="glass-card" id="glass-card">
+        <div class="signin-content">
+          <div class="fade-up logo-mark"><svg viewBox="0 0 256 256" aria-label="Trovesites mark"><path fill="white" d="M 128 192 L 128 256 L 64.5 256 L 32 223 L 0 192 L 0 128 L 64 128 Z M 256 192 L 256 256 L 192.5 256 L 160 223 L 128 192 L 128 128 L 192 128 Z M 128 64 L 128 128 L 64.5 128 L 32 95 L 0 64 L 0 0 L 64 0 Z M 256 64 L 256 128 L 192.5 128 L 160 95 L 128 64 L 128 0 L 192 0 Z"/></svg></div>
+          <h1 class="fade-up delay-1">Step back in!</h1>
+          <p class="fade-up delay-2 subtitle">Log in to continue your mindful exercises, calm routines, and wellness<br class="desktop-break"> pathway</p>
+          <form id="signin-form" class="signin-form">
+            <div class="fade-up delay-3 field"><label for="email">Email</label><input id="email" type="email" placeholder="Your email address" autocomplete="email" required></div>
+            <div class="fade-up delay-4 field"><label for="password">Password</label><div class="password-wrap"><input id="password" type="password" placeholder="Type your password" autocomplete="current-password" required><button type="button" id="toggle-password" aria-label="Show password">◉</button></div></div>
+            <div class="fade-up delay-5 account-row"><label class="check-label"><input type="checkbox"><span class="checkmark">✓</span>Stay signed in</label><button type="button" class="text-button">Reset password?</button></div>
+            <button class="fade-up delay-6 primary-button" type="submit">Sign in</button>
+            <div class="fade-up delay-7 divider"><span></span><b>Or</b><span></span></div>
+            <button class="fade-up delay-8 google-button" type="button"><strong>G</strong>Continue with Google</button>
+            <p class="fade-up delay-9 join-copy">New to this platform? <button type="button" class="join-button">Join Now</button></p>
+          </form>
+        </div>
+      </section>
+    </div>
+  </main>
+  <script src="signin.js"></script>
+</body>
+</html>

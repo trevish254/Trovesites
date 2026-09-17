@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Trovesites portfolio archive. Branding, websites, photography, and visual experiments.">
+  <title>Portfolio — Trovesites</title>
+  <link rel="preconnect" href="https://framerusercontent.com">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="signin-modal.css">
+</head>
+<body>
+  <header class="site-header">
+    <a class="identity" href="#top" aria-label="Trovesites home">
+      <img src="assets/trovesites-logo.jpg" alt="Trovesites">
+      <span>Trovesites</span>
+    </a>
+    <nav class="main-nav" aria-label="Main navigation">
+      <a href="#portfolio" data-home>Libraries</a>
+      <a href="pricing/index.html">Pricing</a>
+      <a href="about/index.html">About us</a>
+      <a href="contact/index.html">Contact us</a>
+    </nav>
+    <div class="header-actions">
+      <div class="socials" aria-label="Social links">
+        <a href="#dribbble" aria-label="Dribbble">◈</a>
+        <a href="#x" aria-label="X">X</a>
+        <a href="#instagram" aria-label="Instagram">◎</a>
+      </div>
+      <a class="contact-button signin-trigger" href="#signin">Sign in</a>
+    </div>
+    <button class="mobile-filter-trigger" type="button" aria-label="Open filters" aria-controls="filter-panel" aria-expanded="false">☰</button>
+  </header>
+
+  <main id="top">
+    <div class="grid-backdrop" aria-hidden="true"></div>
+    <aside class="filter-panel" id="filter-panel" aria-label="Portfolio filters">
+      <div class="search-box">
+        <label for="project-search">Search agents</label>
+        <div class="search-input-wrap">
+          <input id="project-search" type="search" placeholder="" autocomplete="off">
+          <span aria-hidden="true">⌕</span>
+        </div>
+      </div>
+      <section class="filter-section">
+        <h2>Categories</h2>
+        <button class="filter-link is-active" type="button" data-filter="all">All projects</button>
+        <button class="filter-link" type="button" data-filter="templates">Templates</button>
+        <button class="filter-link" type="button" data-filter="components">Components</button>
+        <button class="filter-link" type="button" data-filter="sections">Sections</button>
+        <button class="filter-link" type="button" data-filter="backgrounds">Backgrounds</button>
+        <button class="filter-link" type="button" data-filter="branding">Branding</button>
+        <button class="filter-link" type="button" data-filter="automations">Automations</button>
+      </section>
+      <section class="filter-section">
+        <h2>Tags</h2>
+        <div class="tag-list">
+          <button type="button" data-filter="no-code">NO-CODE</button>
+          <button type="button" data-filter="ui-kit">UI KIT</button>
+          <button type="button" data-filter="logo">LOGO</button>
+          <button type="button" data-filter="concept-art">CONCEPT ART</button>
+          <button type="button" data-filter="ai-prompt">AI PROMPT</button>
+          <button type="button" data-filter="stock-photo">STOCK PHOTO</button>
+          <button type="button" data-filter="template">TEMPLATE</button>
+          <button type="button" data-filter="print">PRINT</button>
+        </div>
+      </section>
+      <section class="filter-section agency-work">
+        <h2>Latest agency work</h2>
+        <article><img src="https://framerusercontent.com/images/S1XoYBF0d1PDfj6sBXkfCybfEQ.png?width=1402&height=1122" alt="Luxury stay branding preview"><div><strong>Client: Luxury Stay branding</strong><small>JULY 15, 2026</small></div></article>
+        <article><img src="https://framerusercontent.com/images/qyI8WIzV0dnYvgWN6icaU57A0.png?width=1536&height=1024" alt="Digital art series preview"><div><strong>Digital Art Series</strong><small>JULY 22, 2026</small></div></article>
+      </section>
+      <div class="sidebar-actions"><a href="contact/index.html">Contact us</a><a class="signin-trigger" href="#signin">Sign in</a></div>
+    </aside>
+
+    <section class="archive" id="portfolio">
+      <div class="hero-copy">
+        <span class="eyebrow">Full archive</span>
+        <h1>Portfolio</h1>
+        <p>The full list — every branding, web &amp;<br>editorial project, sorted by category</p>
+      </div>
+      <div class="category-tags" id="category-tags" aria-label="Category tags"></div>
+      <div class="folder-grid" id="folder-grid" aria-label="Portfolio categories"></div>
+      <div class="project-grid" id="project-grid" aria-live="polite"></div>
+      <section class="project-detail" id="project-detail" hidden aria-live="polite"></section>
+      <p class="empty-state" id="empty-state" hidden>No projects match that search.</p>
+    </section>
+  </main>
+
+  <footer><a href="#portfolio" data-home>Libraries</a><a href="pricing/index.html">Pricing</a><a href="about/index.html">About us</a><a href="contact/index.html">Contact us</a></footer>
+  <script src="script.js"></script>
+  <script src="transitions.js"></script>
+  <script src="signin-modal.js"></script>
+</body>
+</html>
