@@ -1,1 +1,8 @@
 .vercel
+.ngrok-public
+.ngrok-public/
+supabase/.temp/
+tools/ngrok/
+.env
+.env.*
+!.env.example

@@ -21,8 +21,45 @@ signInModal.innerHTML = `
 document.body.append(signInModal);
 
 const closeSignIn = () => { signInModal.classList.remove('is-open'); signInModal.setAttribute('aria-hidden', 'true'); document.body.classList.remove('signin-modal-open'); };
-document.querySelectorAll('.signin-trigger').forEach((trigger) => trigger.addEventListener('click', (event) => { event.preventDefault(); signInModal.classList.add('is-open'); signInModal.setAttribute('aria-hidden', 'false'); document.body.classList.add('signin-modal-open'); signInModal.querySelector('input').focus(); }));
+window.addEventListener('trove-auth-signed-in', closeSignIn);
+document.addEventListener('click', (event) => {
+  const trigger = event.target.closest('.signin-trigger');
+  if (!trigger) return;
+  event.preventDefault();
+  signInModal.classList.add('is-open');
+  signInModal.setAttribute('aria-hidden', 'false');
+  document.body.classList.add('signin-modal-open');
+  signInModal.querySelector('input').focus();
+});
 signInModal.querySelectorAll('[data-signin-close]').forEach((button) => button.addEventListener('click', closeSignIn));
 signInModal.querySelector('[data-signin-password]').addEventListener('click', (event) => { const input = document.querySelector('#modal-password'); input.type = input.type === 'password' ? 'text' : 'password'; event.currentTarget.setAttribute('aria-label', input.type === 'password' ? 'Show password' : 'Hide password'); });
-signInModal.querySelector('form').addEventListener('submit', (event) => event.preventDefault());
+const modalForm = signInModal.querySelector('form');
+modalForm.addEventListener('submit', (event) => {
+  event.preventDefault();
+  const inputs = modalForm.querySelectorAll('input[type="email"], input[type="password"]');
+  if (modalForm.dataset.mode === 'verify') {
+    TroveAuth.verifySignupCode(modalForm, modalForm.dataset.verificationEmail || inputs[0].value.trim(), modalForm.querySelector('.auth-verification input').value.trim());
+    return;
+  }
+  const action = modalForm.dataset.mode === 'signup' ? TroveAuth.signUp : TroveAuth.signIn;
+  action(modalForm, inputs[0].value.trim(), inputs[1].value);
+});
+modalForm.querySelector('.signin-join button').addEventListener('click', () => {
+  const isSignup = modalForm.dataset.mode !== 'signup';
+  modalForm.dataset.mode = isSignup ? 'signup' : 'signin';
+  signInModal.querySelector('.signin-modal-card h2').textContent = isSignup ? 'Create your space.' : 'Step back in!';
+  signInModal.querySelector('.signin-modal-subtitle').textContent = isSignup ? 'Create an account to save your mindful exercises, calm routines, and wellness pathway.' : 'Log in to continue your mindful exercises, calm routines, and wellness pathway';
+  modalForm.querySelector('.signin-submit').textContent = isSignup ? 'Create account' : 'Sign in';
+  modalForm.querySelector('.signin-join button').textContent = isSignup ? 'Back to sign in' : 'Join Now';
+});
+modalForm.querySelector('.signin-modal-row button').addEventListener('click', () => {
+  const email = modalForm.querySelector('input[type="email"]').value.trim();
+  if (!email) {
+    TroveAuth.setAuthMessage(TroveAuth.getAuthMessage(modalForm), 'Enter your email first.', true);
+    modalForm.querySelector('input[type="email"]').focus();
+    return;
+  }
+  TroveAuth.resetPassword(modalForm, email);
+});
+modalForm.querySelector('.signin-google').addEventListener('click', () => TroveAuth.signInWithGoogle(modalForm));
 document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeSignIn(); });
