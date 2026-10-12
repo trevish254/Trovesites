@@ -3,11 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Choose a Trovesites access plan for premium website prompts, background videos, UI components, and Figma assets.">
+  <meta name="theme-color" content="#121212">
+  <meta name="robots" content="index,follow,max-image-preview:large">
+  <link rel="canonical" href="https://trovesites.vercel.app/pricing/">
+  <link rel="icon" href="/assets/trovesites-logo.jpg?v=20260921-1" type="image/jpeg">
+  <link rel="alternate" type="text/plain" href="/llms.txt" title="LLM guidance">
+  <meta property="og:type" content="website"><meta property="og:site_name" content="Trovesites">
+  <meta property="og:title" content="Pricing — Trovesites">
+  <meta property="og:description" content="Premium website prompts, background videos, UI components, and Figma assets for brands.">
+  <meta property="og:url" content="https://trovesites.vercel.app/pricing/"><meta property="og:image" content="https://trovesites.vercel.app/assets/trovesites-logo.jpg">
+  <meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Pricing — Trovesites"><meta name="twitter:description" content="Premium website prompts, background videos, UI components, and Figma assets for brands."><meta name="twitter:image" content="https://trovesites.vercel.app/assets/trovesites-logo.jpg">
   <title>Pricing — Trovesites</title>
   <link rel="preconnect" href="https://framerusercontent.com">
-  <link rel="stylesheet" href="../styles.css">
+  <script src="../theme-init.js?v=20260921-1"></script>
+  <link rel="stylesheet" href="../styles.css?v=20260921-5">
   <link rel="stylesheet" href="../signin-modal.css">
-  <link rel="stylesheet" href="pricing.css">
+  <link rel="stylesheet" href="/pricing/pricing.css?v=20260921-4">
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-0YX88N3LFR"></script>
   <script>
@@ -46,7 +58,7 @@
 
   <main>
     <div class="grid-backdrop" aria-hidden="true"></div>
-    <aside class="filter-panel" aria-label="Portfolio filters">
+    <aside class="filter-panel" id="filter-panel" aria-label="Portfolio filters">
       <div class="search-box"><label>Search agents</label><div class="search-input-wrap"><span aria-hidden="true">⌕</span></div></div>
       <section class="filter-section"><h2>Categories</h2>
         <a class="filter-link" href="../index.html">Templates</a><a class="filter-link" href="../index.html">Components</a>
@@ -66,20 +78,26 @@
 
     <section class="pricing-main">
       <div class="pricing-intro">
-        <span class="eyebrow">Available for new projects</span>
+        <span class="eyebrow">Choose your access</span>
         <h1>Pricing</h1>
-        <p>Project-based rates for brand, product &amp; digital design.<br>Every project is built collage-style — mixing formats,<br>references &amp; mediums into one cohesive identity.</p>
+        <p>Premium design assets for building better websites and brands.<br>Pick the access plan that fits how much<br>you want to create.</p>
       </div>
 
       <div class="price-list">
-        <article class="price-row"><h2>Starter</h2><strong>$1,200</strong><p>A single-piece project — logo, one-pager or a focused visual identity element</p><ul><li>1 design concept</li><li>2 revision rounds</li><li>Source files included</li><li>1-week turnaround</li></ul></article>
-        <article class="price-row"><h2>Studio</h2><strong>$3,500</strong><p>Full brand or product identity — the kind of multi-layered project collage design is built for</p><ul><li>Full brand identity or UI kit</li><li>3 revision rounds</li><li>Source files + style guide</li><li>2–3 week turnaround</li></ul></article>
-        <article class="price-row"><h2>Partner</h2><strong>Custom</strong><p>Ongoing collaboration for founders and teams who need design as an extension of the team</p><ul><li>Monthly retainer</li><li>Unlimited requests</li><li>Priority turnaround</li><li>Dedicated Slack channel</li></ul></article>
+        <article class="price-row"><div class="price-plan"><h2>Starter</h2><a class="plan-action" href="/api/checkout?plan=starter">Get access</a></div><strong>$39<span class="price-term"> / month</span></strong><p>A focused entry point for exploring the Trovesites design library.</p><ul><li>Website prompt library</li><li>Curated background videos</li><li>Essential UI sections</li><li>Starter Figma components</li><li>Personal project use</li></ul></article>
+        <article class="price-row is-featured"><div class="price-plan"><h2>Studio</h2><a class="plan-action" href="/api/checkout?plan=studio">Subscribe</a></div><strong>$99<span class="price-term"> / month</span></strong><p>Full access for creators and teams building polished brand experiences.</p><ul><li>Complete website prompt library</li><li>Premium background video library</li><li>Full UI components library</li><li>Complete Figma component kits</li><li>Commercial brand use</li></ul></article>
+        <article class="price-row"><div class="price-plan"><h2>Lifetime</h2><a class="plan-action" href="/api/checkout?plan=lifetime">Get lifetime access</a></div><strong>$169<span class="price-term"> one time</span></strong><p>A one-time library license for teams that want a lasting design resource.</p><ul><li>Everything in Studio</li><li>Lifetime library access</li><li>Future asset updates</li><li>New prompt and UI drops</li><li>Commercial brand use</li></ul></article>
       </div>
-      <a class="pricing-cta" href="../contact/index.html">Start a project</a>
+      <a class="pricing-cta" href="../contact/index.html">Get access</a>
     </section>
   </main>
 </body>
 <script src="../transitions.js"></script>
+<script src="../mobile-filter.js?v=20260921-1"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../supabase-client.js"></script>
+<script src="../auth.js?v=20260921-2"></script>
+<script src="../auth-ui.js?v=20260921-16"></script>
 <script src="../signin-modal.js"></script>
+<script src="./pricing-checkout.js?v=20260921-1"></script>
 </html>

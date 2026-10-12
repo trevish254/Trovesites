@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Manage billing — Trovesites</title>
+  <script src="../theme-init.js?v=20260921-1"></script>
+  <link rel="stylesheet" href="../styles.css?v=20260921-5">
+  <link rel="stylesheet" href="../signin-modal.css">
+</head>
+<body>
+  <header class="site-header">
+    <a class="identity" href="../index.html" aria-label="Trovesites home"><img src="../assets/trovesites-logo.jpg" alt="Trovesites"><span>Trovesites</span></a>
+    <nav class="main-nav" aria-label="Main navigation"><a href="../index.html#portfolio">Libraries</a><a href="../pricing/index.html">Pricing</a><a href="../about/index.html">About us</a><a href="../contact/index.html">Contact us</a></nav>
+    <div class="header-actions"><div class="socials" aria-label="Social links"><a href="#dribbble" aria-label="Dribbble">◈</a><a href="#x" aria-label="X">X</a><a href="#instagram" aria-label="Instagram">◎</a></div><a class="contact-button signin-trigger" href="#signin">Sign in</a></div>
+  </header>
+  <main><div class="grid-backdrop" aria-hidden="true"></div>
+    <div class="public-account-page">
+      <a class="account-back-link" href="../index.html#portfolio">← Back to library</a>
+      <div class="cms-billing-page">
+        <div class="cms-billing-heading"><div><span class="cms-section-label">Account / Billing</span><h1>Billing &amp; subscription</h1><p>Manage your plan, payment details, and workspace invoices.</p></div><a class="cms-page-action" href="../pricing/index.html">View plans</a></div>
+        <section class="cms-billing-summary"><article><span>Current plan</span><strong>Free</strong><small>No active subscription</small></article><article><span>Monthly total</span><strong>$0</strong><small>USD / month</small></article><article><span>Prompts</span><strong>3 / day</strong><small>Fair-use limit</small></article><article><span>Components</span><strong>5 / day</strong><small>Copies allowed</small></article></section>
+        <div class="cms-billing-grid"><section class="cms-plan-card"><header><div><span class="cms-section-label">Your subscription</span><h2>Free plan</h2><p>Explore the library with fair-use access before choosing a paid plan.</p></div><span class="cms-plan-badge">Active</span></header><div class="cms-plan-price"><strong>$0</strong><span>/ month</span></div><div class="cms-plan-features"><p><i>✓</i> 3 prompts per day</p><p><i>✓</i> Personal project use</p><p><i>✓</i> 3 component visits per week</p><p><i>✓</i> 5 component copies per day</p></div><div class="cms-plan-actions"><a class="cms-page-action" href="../pricing/index.html">Choose a paid plan</a></div></section><section class="cms-usage-card"><header><div><h2>Fair-use limits</h2><span>Your current free access</span></div><a href="../pricing/index.html">View plans</a></header><div class="cms-usage-row"><div><span>Prompts today</span><b>0 of 3</b></div><i><em style="width:0%"></em></i></div><div class="cms-usage-row"><div><span>Component copies today</span><b>0 of 5</b></div><i><em style="width:0%"></em></i></div><div class="cms-usage-row"><div><span>Component visits this week</span><b>0 of 3</b></div><i><em style="width:0%"></em></i></div><div class="cms-usage-note"><span>✦</span><p>Free access is for personal projects. Upgrade when you need more prompts, copies, or commercial usage.</p></div></section></div>
+        <section class="cms-payment-invoices"><section class="cms-payment-card"><header><h2>Payment method</h2><a href="../pricing/index.html">Add</a></header><div class="cms-payment-method"><span class="cms-card-brand">—</span><div><strong>No payment method</strong><small>Add one when you choose a paid plan.</small></div></div><a class="cms-add-payment" href="../pricing/index.html">＋ Choose a plan</a></section><section class="cms-invoices-card"><header><div><h2>Recent invoices</h2><span>Your billing history</span></div><a href="../pricing/index.html">View plans</a></header><table><thead><tr><th>Invoice</th><th>Date</th><th>Amount</th><th>Status</th><th></th></tr></thead><tbody><tr><td colspan="5">No invoices yet. Your free plan has no recurring charge.</td></tr></tbody></table></section></section>
+      </div>
+    </div>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../supabase-client.js"></script>
+  <script src="../billing.js?v=20260921-2"></script>
+  <script src="../auth.js?v=20260921-2"></script>
+  <script src="../auth-ui.js?v=20260921-16"></script>
+  <script src="../signin-modal.js"></script>
+</body>
+</html>

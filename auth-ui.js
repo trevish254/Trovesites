@@ -1,4 +1,21 @@
 const profileTrigger = document.querySelector('.header-actions .signin-trigger');
+const themeToggleHost = document.querySelector('.header-actions');
+const savedTheme = localStorage.getItem('trovesites-theme');
+if (savedTheme === 'dark' || savedTheme === 'light') document.documentElement.dataset.theme = savedTheme;
+if (themeToggleHost && !themeToggleHost.querySelector('.theme-toggle')) {
+  const themeToggle = document.createElement('button');
+  themeToggle.type = 'button';
+  themeToggle.className = 'theme-toggle';
+  themeToggle.setAttribute('aria-label', 'Switch to dark mode');
+  themeToggle.addEventListener('click', () => {
+    const nextTheme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = nextTheme;
+    localStorage.setItem('trovesites-theme', nextTheme);
+    themeToggle.setAttribute('aria-label', nextTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
+    themeToggle.setAttribute('aria-pressed', String(nextTheme === 'dark'));
+  });
+  themeToggleHost.insertBefore(themeToggle, profileTrigger || themeToggleHost.firstChild);
+}
 
 const getInitials = (user) => {
   const name = user.user_metadata?.full_name || user.user_metadata?.name || user.email || 'User';
@@ -77,7 +94,7 @@ const renderSignedIn = (user) => {
   const menu = document.createElement('div');
   menu.className = 'profile-menu';
   menu.hidden = true;
-  menu.innerHTML = '<strong></strong><small></small><button type="button">Sign out</button>';
+  menu.innerHTML = '<strong></strong><small></small><a class="profile-menu-link" href="/bookmarks/">Bookmarks</a><a class="profile-menu-link" href="/billing/">Manage billing</a><button type="button">Sign out</button>';
   menu.querySelector('strong').textContent = user.user_metadata?.full_name || user.user_metadata?.name || 'Signed in';
   menu.querySelector('small').textContent = user.email || '';
   const signOutButton = menu.querySelector('button');

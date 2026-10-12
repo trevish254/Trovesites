@@ -39,6 +39,22 @@ window.renderCmsUi = (dashboard) => {
         </section>
       </main>
     </div>`;
+  const cmsHeaderActions = dashboard.querySelector('.cms-site-header .header-actions');
+  if (cmsHeaderActions && !cmsHeaderActions.querySelector('.cms-theme-toggle')) {
+    const themeToggle = document.createElement('button');
+    themeToggle.type = 'button';
+    themeToggle.className = 'theme-toggle cms-theme-toggle';
+    themeToggle.setAttribute('aria-label', document.documentElement.dataset.theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
+    themeToggle.setAttribute('aria-pressed', String(document.documentElement.dataset.theme === 'dark'));
+    themeToggle.addEventListener('click', () => {
+      const nextTheme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+      document.documentElement.dataset.theme = nextTheme;
+      localStorage.setItem('trovesites-theme', nextTheme);
+      themeToggle.setAttribute('aria-label', nextTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
+      themeToggle.setAttribute('aria-pressed', String(nextTheme === 'dark'));
+    });
+    cmsHeaderActions.insertBefore(themeToggle, cmsHeaderActions.querySelector('#signout-button'));
+  }
   window.troveActiveCmsView = 'dashboard';
   window.setTimeout(() => {
     loadDashboardSummary();
@@ -514,10 +530,16 @@ document.addEventListener('click', async (event) => {
     form.dataset.projectId = project.id;
     form.elements.name.value = project.name || '';
     form.elements.category.value = normalizeProjectCategory(project.category);
+    if (form.elements.aspect_ratio) form.elements.aspect_ratio.value = normalizeProjectAspectRatio(project.aspect_ratio);
+    if (form.elements.is_premium) form.elements.is_premium.checked = Boolean(project.is_premium);
+    if (form.elements.access_plan) form.elements.access_plan.value = project.access_plan || (project.is_premium ? 'starter' : 'free');
+    if (form.elements.status) form.elements.status.value = project.status || 'draft';
     form.elements.tags.value = (project.tags || []).join(', ');
     setProjectTags(form, form.elements.category.value, project.tags || []);
     form.elements.description.value = project.description || '';
+    if (form.elements.prompt) form.elements.prompt.value = project.prompt || '';
     form.elements.image.required = false;
+    if (form.elements.media_url) form.elements.media_url.value = /\.(mp4|webm|mov)(\?|$)/i.test(project.image_url || '') ? project.image_url : '';
     setProjectImagePreview(form, project.image_url, 'Current image');
     form.querySelector('button[type="submit"]').textContent = 'Update project';
     setStatus('');
@@ -544,7 +566,11 @@ document.addEventListener('click', async (event) => {
       slug: `${String(duplicateName).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-${crypto.randomUUID().slice(0, 8)}`,
       category: project.category || 'Uncategorized',
       description: project.description || '',
+      prompt: project.prompt || '',
+      aspect_ratio: normalizeProjectAspectRatio(project.aspect_ratio),
       tags: project.tags || [],
+      is_premium: Boolean(project.is_premium),
+      access_plan: project.access_plan || (project.is_premium ? 'starter' : 'free'),
       status: 'draft',
       image_url: project.image_url || null,
       cloudinary_public_id: project.cloudinary_public_id || null
@@ -566,20 +592,26 @@ document.addEventListener('submit', async (event) => {
   event.preventDefault();
   const status = form.querySelector('[data-project-status]');
   const file = form.elements.image.files?.[0];
+  const mediaUrl = form.elements.media_url?.value.trim() || '';
   const client = window.troveSupabase;
   const projectId = form.dataset.projectId;
-  if (!projectId && !file) { status.textContent = 'Choose a project image first.'; status.dataset.error = 'true'; return; }
+  if (!projectId && !file && !mediaUrl) { status.textContent = 'Choose a media file or enter a media URL.'; status.dataset.error = 'true'; return; }
   const setStatus = (text, error = false) => { status.textContent = text; status.dataset.error = String(error); };
   const submit = form.querySelector('button[type="submit"]');
   submit.disabled = true;
   try {
-    if (projectId && !file) {
+    if (projectId && !file && !mediaUrl) {
       setStatus('Updating project in Supabase…');
       const { error } = await client.from('cms_projects').update({
         name: form.elements.name.value.trim(),
         category: form.elements.category.value.trim() || 'Uncategorized',
         description: form.elements.description.value.trim(),
-        tags: form.elements.tags.value.split(',').map((tag) => tag.trim()).filter(Boolean)
+        prompt: form.elements.prompt.value.trim(),
+        aspect_ratio: normalizeProjectAspectRatio(form.elements.aspect_ratio?.value),
+        tags: form.elements.tags.value.split(',').map((tag) => tag.trim()).filter(Boolean),
+        is_premium: Boolean(form.elements.is_premium?.checked),
+        access_plan: form.elements.access_plan?.value || 'free',
+        status: form.elements.status?.value || 'draft'
       }).eq('id', projectId);
       if (error) throw error;
       await logCmsActivity('updated', { id: projectId, name: form.elements.name.value.trim() }, { imageUpdated: false });
@@ -587,33 +619,43 @@ document.addEventListener('submit', async (event) => {
       form.reset();
       delete form.dataset.projectId;
       form.elements.image.required = true;
+      if (form.elements.media_url) form.elements.media_url.value = '';
       window.setTimeout(() => loadRealProjects(document.querySelector('#cms-dashboard-content')), 600);
       return;
     }
-    setStatus('Uploading image to Cloudinary…');
-    const uploadBody = new FormData();
-    uploadBody.append('file', file);
-    const { data: sessionData } = await client.auth.getSession();
-    const config = window.troveSupabaseConfig || {};
-    const functionResponse = await fetch(`${config.url || client.supabaseUrl}/functions/v1/cloudinary-upload`, {
-      method: 'POST',
-      headers: {
-        apikey: config.anonKey || client.supabaseKey,
-        Authorization: `Bearer ${sessionData.session?.access_token || ''}`
-      },
-      body: uploadBody
-    });
-    const upload = await functionResponse.json().catch(() => ({}));
-    if (!functionResponse.ok || !upload?.secure_url) throw new Error(upload?.error || `Cloudinary upload failed (${functionResponse.status}).`);
+    let media = { secure_url: mediaUrl, public_id: null };
+    if (mediaUrl && !/^https?:\/\//i.test(mediaUrl)) throw new Error('Media URL must start with http:// or https://.');
+    if (file) {
+      setStatus('Uploading media to Cloudinary');
+      const uploadBody = new FormData();
+      uploadBody.append('file', file);
+      const { data: sessionData } = await client.auth.getSession();
+      const config = window.troveSupabaseConfig || {};
+      const functionResponse = await fetch(`${config.url || client.supabaseUrl}/functions/v1/cloudinary-upload`, {
+        method: 'POST',
+        headers: {
+          apikey: config.anonKey || client.supabaseKey,
+          Authorization: `Bearer ${sessionData.session?.access_token || ''}`
+        },
+        body: uploadBody
+      });
+      media = await functionResponse.json().catch(() => ({}));
+      if (!functionResponse.ok || !media?.secure_url) throw new Error(media?.error || `Cloudinary upload failed (${functionResponse.status}).`);
+    }
     if (projectId) {
       setStatus('Updating project in Supabase…');
       const { error } = await client.from('cms_projects').update({
         name: form.elements.name.value.trim(),
         category: form.elements.category.value.trim() || 'Uncategorized',
         description: form.elements.description.value.trim(),
+        prompt: form.elements.prompt.value.trim(),
+        aspect_ratio: normalizeProjectAspectRatio(form.elements.aspect_ratio?.value),
         tags: form.elements.tags.value.split(',').map((tag) => tag.trim()).filter(Boolean),
-        image_url: upload.secure_url,
-        cloudinary_public_id: upload.public_id
+        is_premium: Boolean(form.elements.is_premium?.checked),
+        access_plan: form.elements.access_plan?.value || 'free',
+        status: form.elements.status?.value || 'draft',
+        image_url: media.secure_url,
+        cloudinary_public_id: media.public_id
       }).eq('id', projectId);
       if (error) throw error;
       await logCmsActivity('uploaded', { id: projectId, name: form.elements.name.value.trim() }, { imageUpdated: true });
@@ -621,6 +663,7 @@ document.addEventListener('submit', async (event) => {
       form.reset();
       delete form.dataset.projectId;
       form.elements.image.required = true;
+      if (form.elements.media_url) form.elements.media_url.value = '';
       window.setTimeout(() => loadRealProjects(document.querySelector('#cms-dashboard-content')), 600);
       return;
     }
@@ -631,10 +674,14 @@ document.addEventListener('submit', async (event) => {
       slug: `${name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-${crypto.randomUUID().slice(0, 8)}`,
       category: form.elements.category.value.trim(),
       description: form.elements.description.value.trim(),
+      prompt: form.elements.prompt.value.trim(),
+      aspect_ratio: normalizeProjectAspectRatio(form.elements.aspect_ratio?.value),
       tags: form.elements.tags.value.split(',').map((tag) => tag.trim()).filter(Boolean),
-      status: 'draft',
-      image_url: upload.secure_url,
-      cloudinary_public_id: upload.public_id
+      is_premium: Boolean(form.elements.is_premium?.checked),
+      access_plan: form.elements.access_plan?.value || 'free',
+      status: form.elements.status?.value || 'draft',
+      image_url: media.secure_url,
+      cloudinary_public_id: media.public_id
     });
     if (insertError) throw insertError;
     await logCmsActivity('created', { id: null, name }, { category: form.elements.category.value.trim() });
@@ -765,7 +812,7 @@ async function loadRealProjects(content) {
   const client = window.troveSupabase;
   content.innerHTML = `<div class="cms-management-layout"><section class="cms-management-main"><div class="cms-management-heading"><div><span class="cms-section-label">Operations / Project Management</span><h1>Manage Project Templates</h1><p>Loading projects from Supabase…</p></div></div><section class="cms-content-card cms-user-loading"><div class="cms-content-card-icon">✦</div><div><h2>Loading projects</h2><p>Checking the project workspace.</p></div></section></section></div>`;
   if (!client) return;
-  const { data, error } = await client.from('cms_projects').select('id,name,category,description,tags,status,image_url,cloudinary_public_id,updated_at').order('updated_at', { ascending: false });
+  const { data, error } = await client.from('cms_projects').select('id,name,category,description,prompt,tags,aspect_ratio,is_premium,access_plan,status,image_url,cloudinary_public_id,updated_at').order('updated_at', { ascending: false });
   if (error) {
     content.querySelector('.cms-content-card h2').textContent = 'Project database is not connected yet';
     content.querySelector('.cms-content-card p').textContent = `${error.message} Run supabase/008_cms_projects.sql, then reload.`;
@@ -774,11 +821,33 @@ async function loadRealProjects(content) {
   const projects = (data || []).map((project) => ({ ...project, category: normalizeProjectCategory(project.category) }));
   window.troveCmsProjects = projects;
   const renderApprovedRows = () => projects.map((project) => `<tr><td><input type="checkbox"></td><td><div class="cms-project-name-cell"><img src="${escapeHtml(project.image_url || 'https://framerusercontent.com/images/S1XoYBF0d1PDfj6sBXkfCybfEQ.png?width=1402&height=1122')}" alt=""><strong>${escapeHtml(project.name)}</strong></div></td><td>${escapeHtml(project.category || 'Uncategorized')}</td><td><span class="cms-project-state ${project.status === 'draft' ? 'is-draft' : ''} ${project.status === 'archived' ? 'is-archived' : ''}">${escapeHtml(project.status === 'live' ? 'Live' : project.status === 'archived' ? 'Archived' : 'Draft')}</span></td><td>${new Date(project.updated_at).toLocaleDateString()}</td><td><div class="cms-row-actions"><button type="button" data-project-action="edit" data-project-id="${project.id}" title="Edit project">edit</button><button type="button" data-project-action="duplicate" data-project-id="${project.id}" title="Duplicate project">copy</button><button type="button" data-project-action="archive" data-project-id="${project.id}" title="Archive project">box</button><button class="is-danger" type="button" data-project-action="delete" data-project-id="${project.id}" title="Delete project">delete</button></div></td></tr>`).join('');
-  content.innerHTML = `<div class="cms-management-layout"><section class="cms-management-main"><div class="cms-management-heading"><h1>Manage Project Templates</h1><div class="cms-management-tools"><label><span>⌕</span><input type="search" placeholder="Search"></label><button type="button">filter</button><button type="button">sort</button><button type="button">view</button></div></div><div class="cms-management-actions"><button class="cms-create-project" data-new-project type="button">Create New Project</button><button class="cms-filter-tags" type="button">Filter Tags⌄</button></div><div class="cms-project-table"><table><thead><tr><th><input type="checkbox"></th><th>Name</th><th>Category</th><th>Status</th><th>Last Updated ↕</th><th>Actions</th></tr></thead><tbody>${renderApprovedRows() || '<tr><td colspan="6">No projects yet. Create your first project.</td></tr>'}</tbody></table><footer><span>New page</span><button disabled>‹|</button><button class="is-current">1</button><button>›</button><button>›|</button></footer></div><div class="cms-management-panels"><section><h2>Content Settings</h2><div class="cms-chip-list"><i>Hero</i><i>Landing Page</i><i>Concept ART</i><i>AI</i><i>AI PROMPT</i><i>STOCK PHOTO</i><i>TEMPLATE</i></div></section><section><h2>Categories</h2><p class="is-selected">All projects</p><p>Templates</p><p>Components</p><p>Sections</p><p>Backgrounds</p><p>Branding</p></section><section><h2>LATEST AGENCY WORK</h2><p>▣ Client: Luxury Stay branding</p><p>▣ Digital Art Series</p><p>▣ Digital Art Series</p></section><section><h2>User Prompts</h2><p>We craft timeless brands and thoughtful experiences.</p><p>We craft timeless brands and thoughtful experiences.</p></section></div></section><aside class="cms-edit-project" data-project-form><header><h2>Edit Project</h2><button data-close-project type="button">×</button></header><form class="cms-project-create-form"><label>Project Name<input name="name" required placeholder="Project name"></label><label>Category<select name="category"><option>Templates, Components</option><option>Website design</option><option>Branding</option></select></label><label>Tags<div class="cms-edit-tags"><i>Hero</i><i>Landing Page</i><i>SaaS</i><i>Agency</i><i>Creative</i><i>Technology</i></div><input name="tags" placeholder="Add tags separated by commas"></label><label>Primary Image<input name="image" type="file" accept="image/*" required></label><label>Text Prompt<textarea name="description" placeholder="Describe this project"></textarea></label><p class="cms-project-form-status" data-project-status></p><button class="cms-page-action" type="submit">Save project</button></form></aside></div>`;
+  content.innerHTML = `<div class="cms-management-layout"><section class="cms-management-main"><div class="cms-management-heading"><h1>Manage Project Templates</h1><div class="cms-management-tools"><label><span>⌕</span><input type="search" placeholder="Search"></label><button type="button">filter</button><button type="button">sort</button><button type="button">view</button></div></div><div class="cms-management-actions"><button class="cms-create-project" data-new-project type="button">Create New Project</button><button class="cms-filter-tags" type="button">Filter Tags⌄</button></div><div class="cms-project-table"><table><thead><tr><th><input type="checkbox"></th><th>Name</th><th>Category</th><th>Status</th><th>Last Updated ↕</th><th>Actions</th></tr></thead><tbody>${renderApprovedRows() || '<tr><td colspan="6">No projects yet. Create your first project.</td></tr>'}</tbody></table><footer><span>New page</span><button disabled>‹|</button><button class="is-current">1</button><button>›</button><button>›|</button></footer></div><div class="cms-management-panels"><section><h2>Content Settings</h2><div class="cms-chip-list"><i>Hero</i><i>Landing Page</i><i>Concept ART</i><i>AI</i><i>AI PROMPT</i><i>STOCK PHOTO</i><i>TEMPLATE</i></div></section><section><h2>Categories</h2><p class="is-selected">All projects</p><p>Templates</p><p>Components</p><p>Sections</p><p>Backgrounds</p><p>Branding</p></section><section><h2>LATEST AGENCY WORK</h2><p>▣ Client: Luxury Stay branding</p><p>▣ Digital Art Series</p><p>▣ Digital Art Series</p></section><section><h2>User Prompts</h2><p>We craft timeless brands and thoughtful experiences.</p><p>We craft timeless brands and thoughtful experiences.</p></section></div></section><aside class="cms-edit-project" data-project-form><header><h2>Edit Project</h2><button data-close-project type="button">×</button></header><form class="cms-project-create-form"><label>Project Name<input name="name" required placeholder="Project name"></label><label>Category<select name="category"><option>Templates, Components</option><option>Website design</option><option>Branding</option></select></label><label>Tags<div class="cms-edit-tags"><i>Hero</i><i>Landing Page</i><i>SaaS</i><i>Agency</i><i>Creative</i><i>Technology</i></div><input name="tags" placeholder="Add tags separated by commas"></label><label class="cms-premium-toggle"><input name="is_premium" type="checkbox"><span>Premium product</span><small>Show a Premium badge in the public library.</small></label><label>Primary Image<input name="image" type="file" accept="image/*,video/*" data-media-file required></label><label>Or paste image/video URL<input name="media_url" type="url" placeholder="https://…"><small>Direct image/video URL; use a video file upload for YouTube or Vimeo.</small></label><label>Short description<textarea name="description" placeholder="A brief description shown on the product page"></textarea></label><label>Prompt<textarea name="prompt" placeholder="Full prompt copied by users"></textarea></label><p class="cms-project-form-status" data-project-status></p><button class="cms-page-action" type="submit">Save project</button></form></aside></div>`;
   return;
   const renderRows = () => projects.map((project) => `<tr><td><input type="checkbox"></td><td><div class="cms-page-cell"><span class="cms-page-icon">▱</span><span><strong>${escapeHtml(project.name)}</strong><small>${escapeHtml(project.description || 'No description')}</small></span></div></td><td>${escapeHtml(project.category || 'Uncategorized')}</td><td><span class="cms-page-status ${project.status === 'draft' ? 'is-draft' : ''}"><i></i>${escapeHtml(project.status || 'draft')}</span></td><td>${new Date(project.updated_at).toLocaleDateString()}</td><td><button class="cms-page-more" type="button">•••</button></td></tr>`).join('');
-  content.innerHTML = `<div class="cms-management-layout"><section class="cms-management-main"><div class="cms-management-heading"><div><span class="cms-section-label">Operations / Project Management</span><h1>Manage Project Templates</h1><p>Real projects saved in your Supabase workspace.</p></div><button class="cms-create-project" data-new-project type="button">Create New Project</button></div><div class="cms-project-table"><table><thead><tr><th><input type="checkbox"></th><th>Name</th><th>Category</th><th>Status</th><th>Last Updated</th><th>Actions</th></tr></thead><tbody>${renderRows() || '<tr><td colspan="6">No projects yet. Create your first project.</td></tr>'}</tbody></table><footer><span>${projects.length} saved project${projects.length === 1 ? '' : 's'}</span></footer></div></section><aside class="cms-edit-project" data-project-form hidden><header><h2>Create Project</h2><button data-close-project type="button">×</button></header><form class="cms-project-create-form"><label>Project name<input name="name" required placeholder="Project name"></label><label>Category<input name="category" required placeholder="Website design"></label><label>Description<textarea name="description" placeholder="Describe this project"></textarea></label><label>Tags<input name="tags" placeholder="branding, template, no-code"></label><label>Project image<input name="image" type="file" accept="image/*" required></label><div class="cms-upload-preview" data-upload-preview hidden></div><p class="cms-project-form-status" data-project-status></p><button class="cms-page-action" type="submit">Save project</button></form></aside></div>`;
+  content.innerHTML = `<div class="cms-management-layout"><section class="cms-management-main"><div class="cms-management-heading"><div><span class="cms-section-label">Operations / Project Management</span><h1>Manage Project Templates</h1><p>Real projects saved in your Supabase workspace.</p></div><button class="cms-create-project" data-new-project type="button">Create New Project</button></div><div class="cms-project-table"><table><thead><tr><th><input type="checkbox"></th><th>Name</th><th>Category</th><th>Status</th><th>Last Updated</th><th>Actions</th></tr></thead><tbody>${renderRows() || '<tr><td colspan="6">No projects yet. Create your first project.</td></tr>'}</tbody></table><footer><span>${projects.length} saved project${projects.length === 1 ? '' : 's'}</span></footer></div></section><aside class="cms-edit-project" data-project-form hidden><header><h2>Create Project</h2><button data-close-project type="button">×</button></header><form class="cms-project-create-form"><label>Project name<input name="name" required placeholder="Project name"></label><label>Category<input name="category" required placeholder="Website design"></label><label>Description<textarea name="description" placeholder="Describe this project"></textarea></label><label>Tags<input name="tags" placeholder="branding, template, no-code"></label><label>Project image<input name="image" type="file" accept="image/*,video/*" data-media-file required></label><label>Or paste image/video URL<input name="media_url" type="url" placeholder="https://…"><small>Direct image/video URL</small></label><div class="cms-upload-preview" data-upload-preview hidden></div><p class="cms-project-form-status" data-project-status></p><button class="cms-page-action" type="submit">Save project</button></form></aside></div>`;
 }
+
+function enhanceProjectStatusControls(content, projects) {
+  const statusOptions = '<option value="draft">Draft</option><option value="live">Live</option><option value="archived">Archived</option>';
+  content.querySelectorAll('.cms-project-table tbody tr').forEach((row, index) => {
+    const project = projects[index];
+    const cell = row.children[3];
+    if (!project || !cell || cell.querySelector('[data-project-status-id]')) return;
+    cell.innerHTML = `<select class="cms-project-status-select" data-project-status-id="${project.id}" aria-label="Set status for ${escapeHtml(project.name)}">${statusOptions}</select>`;
+    cell.querySelector('select').value = project.status || 'draft';
+  });
+  const form = content.querySelector('[data-project-form] form');
+  if (form && !form.elements.status) {
+    const label = document.createElement('label');
+    label.innerHTML = `Status<select name="status"><option value="draft">Draft</option><option value="live">Live</option><option value="archived">Archived</option></select>`;
+    form.querySelector('[name="name"]')?.closest('label')?.after(label);
+  }
+}
+
+new MutationObserver(() => {
+  const content = document.querySelector('#cms-dashboard-content');
+  if (content && window.troveCmsProjects) enhanceProjectStatusControls(content, window.troveCmsProjects);
+}).observe(document.body, { childList: true, subtree: true });
 
 function setProjectCategoryOptions(form, currentValue = '') {
   const select = form?.elements?.category;
@@ -790,7 +859,12 @@ function setProjectCategoryOptions(form, currentValue = '') {
 }
 
 function normalizeProjectCategory(category) {
-  return category === 'Templates, Components' ? 'Templates' : (category || 'Uncategorized');
+  const value = String(category || '').trim();
+  return /^(templates\s*[,/&]\s*components)$/i.test(value) ? 'Templates' : (value || 'Uncategorized');
+}
+
+function normalizeProjectAspectRatio(aspectRatio) {
+  return aspectRatio === '9:16' ? '9:16' : '4:3';
 }
 
 const projectTagsByCategory = {
@@ -816,7 +890,24 @@ function setProjectTags(form, category, selectedTags = []) {
   container.innerHTML = suggestions.map((tag) => `<i class="${selected.has(tag) ? 'is-selected' : ''}" data-project-tag="${escapeHtml(tag)}" role="button" tabindex="0">${escapeHtml(tag)}</i>`).join('');
 }
 
+document.addEventListener('input', (event) => {
+  const urlInput = event.target.closest('.cms-project-create-form input[name="media_url"]');
+  if (urlInput?.form?.elements?.image) urlInput.form.elements.image.required = !urlInput.value.trim() && !urlInput.form.elements.image.files?.length;
+});
 document.addEventListener('change', (event) => {
+  const statusSelect = event.target.closest('[data-project-status-id]');
+  if (statusSelect) {
+    const project = (window.troveCmsProjects || []).find((item) => item.id === statusSelect.dataset.projectStatusId);
+    if (project && window.troveSupabase) {
+      statusSelect.disabled = true;
+      window.troveSupabase.from('cms_projects').update({ status: statusSelect.value }).eq('id', project.id).then(({ error }) => {
+        statusSelect.disabled = false;
+        if (error) window.alert(error.message);
+        else { project.status = statusSelect.value; }
+      });
+    }
+    return;
+  }
   const select = event.target.closest('[data-project-form] select[name="category"]');
   if (select) {
     select.form.elements.tags.value = '';
@@ -852,6 +943,16 @@ function initializeProjectFormOptions() {
   if (managementMain) initializeProjectQuickCards(managementMain);
   const form = document.querySelector('[data-project-form] form');
   if (!form || form.dataset.categoryOptionsReady) return;
+  if (!form.elements.aspect_ratio) {
+    const label = document.createElement('label');
+    label.innerHTML = '<span>Card aspect ratio</span><select name="aspect_ratio"><option value="4:3">4:3 landscape</option><option value="9:16">9:16 portrait</option></select>';
+    form.querySelector('[name="category"]')?.closest('label')?.after(label);
+  }
+  if (!form.elements.access_plan) {
+    const label = document.createElement('label');
+    label.innerHTML = '<span>Required access plan</span><select name="access_plan"><option value="free">Free</option><option value="starter">Starter</option><option value="studio">Studio</option><option value="lifetime">Lifetime</option></select>';
+    form.querySelector('[name="is_premium"]')?.closest('label')?.after(label) || form.querySelector('[name="category"]')?.closest('label')?.after(label);
+  }
   setProjectCategoryOptions(form);
   setProjectTags(form, form.elements.category.value, []);
   form.dataset.categoryOptionsReady = 'true';
@@ -906,10 +1007,15 @@ function setProjectImagePreview(form, source, label = 'Current image') {
   preview.innerHTML = `<img src="${escapeHtml(source)}" alt="${escapeHtml(label)}"><span>${escapeHtml(label)}</span>`;
 }
 
+document.addEventListener('input', (event) => {
+  const urlInput = event.target.closest('.cms-project-create-form input[name="media_url"]');
+  if (urlInput?.form?.elements?.image) urlInput.form.elements.image.required = !urlInput.value.trim() && !urlInput.form.elements.image.files?.length;
+});
 document.addEventListener('change', (event) => {
   const input = event.target.closest('.cms-project-create-form input[name="image"]');
   const file = input?.files?.[0];
-  if (file) setProjectImagePreview(input.form, URL.createObjectURL(file), 'New image selected');
+  if (input?.form?.elements?.image) input.form.elements.image.required = !file && !input.form.elements.media_url?.value.trim();
+  if (file) setProjectImagePreview(input.form, URL.createObjectURL(file), 'New media selected');
 });
 
 function escapeHtml(value) {

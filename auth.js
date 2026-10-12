@@ -4,7 +4,7 @@ const productionSiteOrigin = 'https://trovesites.vercel.app';
 const getSiteOrigin = () => {
   const host = window.location.hostname;
   const isLocal = host === 'localhost' || host === '127.0.0.1' || host === '::1';
-  return isLocal ? window.location.origin : productionSiteOrigin;
+  return isLocal ? window.location.origin : (window.location.origin || productionSiteOrigin);
 };
 
 const setAuthMessage = (element, message, isError = false) => {

@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /cms/
+Disallow: /signin/
+Disallow: /trovex-ops-7c4b/
+
+Sitemap: https://trovesites.vercel.app/sitemap.xml

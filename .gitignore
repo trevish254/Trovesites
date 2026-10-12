@@ -6,3 +6,5 @@ tools/ngrok/
 .env
 .env.*
 !.env.example
+
+.env*

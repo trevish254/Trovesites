@@ -3,9 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>About us — Trovesites</title>
+  <meta name="description" content="Meet Trovesites, the creative studio behind thoughtful brands, websites, digital products, motion, and interactive experiences.">
+  <meta name="theme-color" content="#121212">
+  <meta name="robots" content="index,follow,max-image-preview:large">
+  <link rel="canonical" href="https://trovesites.vercel.app/about/">
+  <link rel="icon" href="/assets/trovesites-logo.jpg?v=20260921-1" type="image/jpeg">
+  <link rel="alternate" type="text/plain" href="/llms.txt" title="LLM guidance">
+  <meta property="og:type" content="website"><meta property="og:site_name" content="Trovesites">
+  <meta property="og:title" content="About Trovesites — Creative studio">
+  <meta property="og:description" content="The creative studio behind thoughtful brands and digital experiences.">
+  <meta property="og:url" content="https://trovesites.vercel.app/about/"><meta property="og:image" content="https://trovesites.vercel.app/assets/trovesites-logo.jpg">
+  <meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="About Trovesites — Creative studio"><meta name="twitter:description" content="The creative studio behind thoughtful brands and digital experiences."><meta name="twitter:image" content="https://trovesites.vercel.app/assets/trovesites-logo.jpg">
+  <title>About Trovesites — Creative studio</title>
   <link rel="preconnect" href="https://framerusercontent.com">
-  <link rel="stylesheet" href="../styles.css">
+  <script src="../theme-init.js?v=20260921-1"></script>
+  <link rel="stylesheet" href="../styles.css?v=20260921-5">
   <link rel="stylesheet" href="../signin-modal.css">
   <link rel="stylesheet" href="about.css">
   <!-- Google tag (gtag.js) -->
@@ -37,7 +49,7 @@
 
   <main>
     <div class="grid-backdrop" aria-hidden="true"></div>
-    <aside class="filter-panel" aria-label="Portfolio filters">
+    <aside class="filter-panel" id="filter-panel" aria-label="Portfolio filters">
       <div class="search-box"><label>Search agents</label><div class="search-input-wrap"><span aria-hidden="true">⌕</span></div></div>
       <section class="filter-section"><h2>Categories</h2>
         <a class="filter-link" href="../index.html">Templates</a><a class="filter-link" href="../index.html">Components</a>
@@ -68,5 +80,10 @@
   </main>
 </body>
 <script src="../transitions.js"></script>
+<script src="../mobile-filter.js?v=20260921-1"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../supabase-client.js"></script>
+<script src="../auth.js?v=20260921-2"></script>
+<script src="../auth-ui.js?v=20260921-16"></script>
 <script src="../signin-modal.js"></script>
 </html>

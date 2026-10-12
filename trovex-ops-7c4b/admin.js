@@ -12,7 +12,7 @@ const productionCmsUrl = 'https://trovesites.vercel.app/cms/';
 const getCmsRedirectUrl = () => {
   const host = window.location.hostname;
   const isLocal = host === 'localhost' || host === '127.0.0.1' || host === '::1';
-  return isLocal ? `${window.location.origin}/cms/` : productionCmsUrl;
+  return `${isLocal ? window.location.origin : (window.location.origin || productionCmsUrl)}/cms/`;
 };
 
 const renderNotFound = () => {

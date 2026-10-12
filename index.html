@@ -3,10 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Trovesites portfolio archive. Branding, websites, photography, and visual experiments.">
-  <title>Portfolio — Trovesites</title>
+  <meta name="description" content="Explore Trovesites, a creative studio portfolio of thoughtful brands, websites, digital products, and visual experiences.">
+  <meta name="theme-color" content="#121212">
+  <meta name="robots" content="index,follow,max-image-preview:large">
+  <link rel="canonical" href="https://trovesites.vercel.app/">
+  <link rel="icon" href="/assets/trovesites-logo.jpg?v=20260921-1" type="image/jpeg">
+  <link rel="alternate" type="text/plain" href="/llms.txt" title="LLM guidance">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Trovesites">
+  <meta property="og:title" content="Trovesites — Creative studio portfolio">
+  <meta property="og:description" content="Thoughtful brands, websites, digital products, and visual experiences by Trovesites.">
+  <meta property="og:url" content="https://trovesites.vercel.app/">
+  <meta property="og:image" content="https://trovesites.vercel.app/assets/trovesites-logo.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Trovesites — Creative studio portfolio">
+  <meta name="twitter:description" content="Thoughtful brands, websites, digital products, and visual experiences by Trovesites.">
+  <meta name="twitter:image" content="https://trovesites.vercel.app/assets/trovesites-logo.jpg">
+  <title>Trovesites — Creative studio portfolio</title>
   <link rel="preconnect" href="https://framerusercontent.com">
-  <link rel="stylesheet" href="styles.css?v=20260919-9">
+  <script src="theme-init.js?v=20260921-1"></script>
+  <link rel="stylesheet" href="styles.css?v=20260921-4">
   <link rel="stylesheet" href="signin-modal.css">
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-0YX88N3LFR"></script>
@@ -15,6 +31,17 @@
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
     gtag('config', 'G-0YX88N3LFR');
+  </script>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Trovesites",
+      "url": "https://trovesites.vercel.app/",
+      "logo": "https://trovesites.vercel.app/assets/trovesites-logo.jpg",
+      "description": "A creative studio for thoughtful brands and digital experiences.",
+      "email": "hello@trovesites.com"
+    }
   </script>
   <script>
     window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
@@ -95,6 +122,17 @@
         <h1>Portfolio</h1>
         <p>The full list — every branding, web &amp;<br>editorial project, sorted by category</p>
       </div>
+      <div class="archive-tools" aria-label="Search and filter library">
+        <label class="archive-search"><span>Search library</span><input id="archive-search" type="search" placeholder="Search projects or tags" autocomplete="off"></label>
+        <div class="archive-filter-buttons" aria-label="Featured filters">
+          <span class="archive-filter-label">Featured</span>
+          <button type="button" class="is-active" data-archive-filter="all">All</button>
+          <button type="button" data-quick-filter="free">Free</button>
+          <button type="button" data-quick-filter="premium">Premium</button>
+          <button type="button" data-quick-filter="popular">Popular</button>
+          <button type="button" data-archive-filter="templates">Templates</button>
+        </div>
+      </div>
       <div class="category-tags" id="category-tags" aria-label="Category tags"></div>
       <div class="folder-grid" id="folder-grid" aria-label="Portfolio categories"></div>
       <div class="project-grid" id="project-grid" aria-live="polite"></div>
@@ -106,10 +144,11 @@
   <footer><a href="#portfolio" data-home>Libraries</a><a href="pricing/index.html">Pricing</a><a href="about/index.html">About us</a><a href="contact/index.html">Contact us</a></footer>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-client.js"></script>
-  <script src="auth.js"></script>
-  <script src="script.js"></script>
+  <script src="auth.js?v=20260921-1"></script>
+  <script src="script.js?v=20260921-9"></script>
+  <script src="mobile-filter.js?v=20260921-1"></script>
   <script src="transitions.js"></script>
   <script src="signin-modal.js"></script>
-    <script src="auth-ui.js?v=20260919-13"></script>
+    <script src="auth-ui.js?v=20260921-16"></script>
 </body>
 </html>

@@ -40,7 +40,8 @@ Deno.serve(async (request) => {
   const form = await request.formData();
   const file = form.get('file');
   if (!(file instanceof File)) return json({ error: 'A file field is required' }, 400);
-  if (file.size > 10 * 1024 * 1024) return json({ error: 'Maximum file size is 10 MB' }, 413);
+  if (file.size > 100 * 1024 * 1024) return json({ error: 'Maximum file size is 100 MB' }, 413);
+  if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) return json({ error: 'Only image and video files are supported' }, 415);
 
   const cloudName = Deno.env.get('CLOUDINARY_CLOUD_NAME');
   const apiKey = Deno.env.get('CLOUDINARY_API_KEY');
@@ -57,9 +58,10 @@ Deno.serve(async (request) => {
   upload.append('public_id', publicId);
   upload.append('signature', signature);
 
-  const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/upload`, { method: 'POST', body: upload });
+  const resourceType = file.type.startsWith('video/') ? 'video' : 'image';
+  const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`, { method: 'POST', body: upload });
   const result = await response.json();
   if (!response.ok) return json({ error: result.error?.message || 'Cloudinary upload failed' }, 502);
 
-  return json({ secure_url: result.secure_url, public_id: result.public_id, width: result.width, height: result.height, format: result.format });
+  return json({ secure_url: result.secure_url, public_id: result.public_id, width: result.width, height: result.height, format: result.format, resource_type: resourceType });
 });

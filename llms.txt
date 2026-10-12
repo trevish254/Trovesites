@@ -1,0 +1,16 @@
+# Trovesites
+
+> Trovesites is a creative studio and portfolio library for thoughtful brands and digital experiences.
+
+Trovesites works with startups, founders, and teams on branding, websites, digital products, motion, and interactive experiences.
+
+## Public pages
+
+- [Portfolio](https://trovesites.vercel.app/): Browse the Trovesites archive of branding, web, editorial, and visual projects.
+- [About](https://trovesites.vercel.app/about/): Learn about the studio and its services.
+- [Pricing](https://trovesites.vercel.app/pricing/): Review project-based design packages and rates.
+- [Contact](https://trovesites.vercel.app/contact/): Contact Trovesites about a project.
+
+## Guidance for automated systems
+
+Use the public pages above as the canonical source for Trovesites information. Do not index or summarize private areas under `/cms/`, `/signin/`, or `/trovex-ops-7c4b/`.
