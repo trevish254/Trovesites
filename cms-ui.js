@@ -57,10 +57,12 @@ window.renderCmsUi = (dashboard) => {
   }
   window.troveActiveCmsView = 'dashboard';
   window.setTimeout(() => {
-    loadDashboardSummary();
+    loadDashboardSummary().then(loadDashboardRevenue);
     loadDashboardCharts();
     loadVercelMetrics('dashboard');
   }, 0);
+  const content = dashboard.querySelector('#cms-dashboard-content');
+  if (content) content.dataset.dashboardMarkup = content.innerHTML;
 };
 
 async function loadVercelMetrics(view = 'dashboard') {
@@ -181,6 +183,8 @@ document.addEventListener('click', (event) => {
   if (!content) return;
   if (view === 'dashboard') {
     if (content.dataset.dashboardMarkup) content.innerHTML = content.dataset.dashboardMarkup;
+    loadDashboardSummary().then(loadDashboardRevenue);
+    loadDashboardCharts();
     loadVercelMetrics('dashboard');
     return;
     content.innerHTML = `<div class="cms-projects-head"><h1>Content Management - All Projects</h1><div class="cms-project-actions"><button class="cms-page-action" type="button">Add New Project</button><select><option>Drafts</option><option>Live</option><option>All projects</option></select></div></div><div class="cms-project-filters"><label>Site Section<select><option>Dropdown</option>${folders.map(([name]) => `<option>${name}</option>`).join('')}</select></label><label>Publish Status<select><option>Dropdown</option><option>Live</option><option>Draft</option></select></label><label class="cms-project-search"><input type="search" placeholder="Search"><span>⌕</span></label></div><label class="cms-add-item"><input type="checkbox"> Add new element</label><div class="cms-project-grid">${folders.slice(0, 4).map(([name, count, first, second], index) => `<article class="cms-project-card"><header><label><input type="checkbox"> ${name} - Project Management</label><span class="cms-project-state ${index === 1 || index === 3 ? 'is-draft' : ''}">${index === 1 || index === 3 ? 'Draft' : 'Live'}</span></header><div class="cms-project-card-body"><div class="cms-project-preview"><div class="folder-stack"><div class="folder-paper folder-paper-left"><img src="${first}" alt=""></div><div class="folder-paper folder-paper-right"><img src="${second}" alt=""></div><div class="folder-paper folder-paper-front"><img src="${first}" alt="${name} preview"></div><span class="folder-badge">${count}</span><span class="folder-clip" aria-hidden="true"></span></div></div><div class="cms-project-editor"><button class="cms-project-pencil" type="button" aria-label="Edit ${name}">edit</button><label>Project name: <input value="${name}" /></label><label>Brief description <textarea>Brief description or brand thoughtful experiences</textarea></label><span>Tags</span><div class="cms-project-tags"><i>NO-CODE x</i><i>UI KIT</i><i>LOGO</i><i>CONCEPT ART x</i><i>AI PROMPT x</i><i>TEMPLATE x</i><i>PRINT</i></div><span>Bulk actions</span><div class="cms-project-bulk"><button type="button">Add to Components</button><button type="button">Assign to Agent</button><b>x</b></div></div></div></article>`).join('')}</div>`;
@@ -441,7 +445,7 @@ async function loadDashboardSummary() {
     ['Total projects', projectRows.length, 'Saved in workspace'],
     ['Total media', projectRows.filter((project) => project.image_url).length, 'Images linked to projects'],
     ['Total folders', folderCount || 0, 'Content categories'],
-    ['Revenue / month', '$0', 'Payments not configured'],
+    ['Revenue / month', '—', 'Loading Dodo payments'],
     ['Active agents', activeAgentCount || 0, 'Active in workspace'],
   ];
   cards.forEach((card, index) => {
@@ -452,8 +456,57 @@ async function loadDashboardSummary() {
     const note = card.querySelector('small');
     if (!note) return;
     note.className = index === 4 ? '' : 'positive';
-    note.textContent = index === 4 ? '— Payments not configured' : `▲ ${summary[index][2]}`;
+    note.textContent = index === 4 ? 'Loading Dodo payments' : `▲ ${summary[index][2]}`;
   });
+}
+
+async function loadDashboardRevenue() {
+  if (window.troveActiveCmsView !== 'dashboard') return;
+  const card = [...document.querySelectorAll('.cms-kpi-card')].find((item) => item.querySelector('.cms-kpi-top span')?.textContent.trim().toLowerCase() === 'revenue / month');
+  const value = card?.querySelector('strong');
+  const note = card?.querySelector('small');
+  const client = window.troveSupabase;
+  if (!card || !value || !note || !client) return;
+
+  value.textContent = '…';
+  note.textContent = 'Loading Dodo payments';
+  try {
+    const { data: sessionData } = await client.auth.getSession();
+    const accessToken = sessionData.session?.access_token;
+    if (!accessToken) throw new Error('Sign in again to load revenue.');
+    const response = await fetch('/api/admin/revenue', {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(result.error || 'Dodo revenue is unavailable.');
+    if (window.troveActiveCmsView !== 'dashboard') return;
+
+    const entries = Object.entries(result.by_currency || {}).sort((a, b) => b[1] - a[1]);
+    const month = new Date(`${result.period}-01T00:00:00Z`).toLocaleDateString(undefined, { month: 'short', year: 'numeric', timeZone: 'UTC' });
+    const environmentLabel = result.environment === 'live_mode' ? 'Live Dodo' : 'Dodo test mode';
+    if (entries.length === 1) {
+      const [currency, minorAmount] = entries[0];
+      const formatter = new Intl.NumberFormat(undefined, { style: 'currency', currency });
+      const fractionDigits = formatter.resolvedOptions().maximumFractionDigits;
+      value.textContent = formatter.format(minorAmount / (10 ** fractionDigits));
+      card.removeAttribute('title');
+    } else if (entries.length > 1) {
+      value.textContent = `${entries.length} currencies`;
+      card.title = entries.map(([currency, minorAmount]) => {
+        const formatter = new Intl.NumberFormat(undefined, { style: 'currency', currency });
+        const fractionDigits = formatter.resolvedOptions().maximumFractionDigits;
+        return formatter.format(minorAmount / (10 ** fractionDigits));
+      }).join(' · ');
+    } else {
+      value.textContent = '0';
+      card.removeAttribute('title');
+    }
+    note.textContent = `${result.payment_count || 0} successful payment${result.payment_count === 1 ? '' : 's'} · ${month} · ${environmentLabel}`;
+  } catch (error) {
+    if (window.troveActiveCmsView !== 'dashboard') return;
+    value.textContent = 'Unavailable';
+    note.textContent = error.message || 'Dodo revenue is unavailable.';
+  }
 }
 
 async function loadDashboardCharts() {
@@ -539,7 +592,7 @@ document.addEventListener('click', async (event) => {
     form.elements.description.value = project.description || '';
     if (form.elements.prompt) form.elements.prompt.value = project.prompt || '';
     form.elements.image.required = false;
-    if (form.elements.media_url) form.elements.media_url.value = /\.(mp4|webm|mov)(\?|$)/i.test(project.image_url || '') ? project.image_url : '';
+    if (form.elements.media_url) form.elements.media_url.value = isCmsVideoUrl(project.image_url) ? project.image_url : '';
     setProjectImagePreview(form, project.image_url, 'Current image');
     form.querySelector('button[type="submit"]').textContent = 'Update project';
     setStatus('');
@@ -749,7 +802,7 @@ async function loadRealMedia(content) {
   }
   const media = (data || []).map((item) => ({ ...item, category: normalizeProjectCategory(item.category) }));
   const categories = ['Templates', 'Components', 'Sections', 'Backgrounds', 'Branding', 'Website design', 'Other'];
-  const renderCards = (items) => items.map((item) => `<article class="cms-media-card"><div class="cms-media-image"><img src="${escapeHtml(item.image_url)}" alt="${escapeHtml(item.name)}"><button type="button" aria-label="More actions for ${escapeHtml(item.name)}">•••</button><input type="checkbox"></div><div class="cms-media-meta"><strong title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</strong><span>IMAGE · ${escapeHtml(item.category || 'Uncategorized')}</span></div></article>`).join('');
+  const renderCards = (items) => items.map((item) => `<article class="cms-media-card"><div class="cms-media-image">${renderCmsMedia(item.image_url, item.name)}<button type="button" aria-label="More actions for ${escapeHtml(item.name)}">•••</button><input type="checkbox"></div><div class="cms-media-meta"><strong title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</strong><span>${isCmsVideoUrl(item.image_url) ? 'VIDEO' : 'IMAGE'} · ${escapeHtml(item.category || 'Uncategorized')}</span></div></article>`).join('');
   const render = (items = media, category = 'All media') => {
     const grouped = categories.map((item) => `<button type="button" data-media-category="${escapeHtml(item)}"><span>▧</span> ${escapeHtml(item)} <b>${media.filter((asset) => asset.category === item).length}</b></button>`).join('');
     content.innerHTML = `<div class="cms-media-page"><div class="cms-media-heading"><div><span class="cms-section-label">Content / Media Library</span><h1>Media library</h1><p>Real images uploaded through your project workspace.</p></div><span class="cms-media-live-status"><i></i>Connected to Supabase</span></div><section class="cms-media-summary"><article><span>Total media</span><strong>${media.length}</strong><small>Database-backed images</small></article><article><span>Categories</span><strong>${categories.length}</strong><small>Used by project assets</small></article><article><span>Cloudinary assets</span><strong>${media.filter((item) => item.cloudinary_public_id).length}</strong><small>Linked image files</small></article><article><span>Latest upload</span><strong>${media[0] ? new Date(media[0].updated_at).toLocaleDateString() : '—'}</strong><small>Most recently updated</small></article></section><div class="cms-media-toolbar"><label><span>⌕</span><input type="search" placeholder="Search media"></label><select data-media-type><option>All media</option><option>Images</option></select><select data-media-sort><option value="recent">Recently added</option><option value="name">Name A-Z</option></select><button type="button">☷</button><button type="button">▦</button></div><div class="cms-media-layout"><aside class="cms-media-folders"><header><h2>Categories</h2></header><button class="is-active" type="button" data-media-category="All media"><span>▧</span> All media <b>${media.length}</b></button>${grouped}</aside><section class="cms-media-assets"><header><div><h2 data-media-heading>${escapeHtml(category)}</h2><span data-media-count>Showing ${items.length} image${items.length === 1 ? '' : 's'}</span></div><label><input type="checkbox"> Select all</label></header><div class="cms-media-grid" data-media-grid>${renderCards(items) || '<p class="cms-media-empty">No uploaded project images found.</p>'}</div></section></div></div>`;
@@ -769,7 +822,7 @@ function bindMediaControls(content, media, categories) {
     const filtered = media.filter((item) => (activeCategory === 'All media' || item.category === activeCategory) && `${item.name} ${item.category}`.toLowerCase().includes(query));
     if (sort.value === 'name') filtered.sort((a, b) => a.name.localeCompare(b.name));
     else filtered.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
-    content.querySelector('[data-media-grid]').innerHTML = filtered.map((item) => `<article class="cms-media-card"><div class="cms-media-image"><img src="${escapeHtml(item.image_url)}" alt="${escapeHtml(item.name)}"><button type="button" aria-label="More actions for ${escapeHtml(item.name)}">•••</button><input type="checkbox"></div><div class="cms-media-meta"><strong title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</strong><span>IMAGE · ${escapeHtml(item.category || 'Uncategorized')}</span></div></article>`).join('') || '<p class="cms-media-empty">No matching images found.</p>';
+    content.querySelector('[data-media-grid]').innerHTML = filtered.map((item) => `<article class="cms-media-card"><div class="cms-media-image">${renderCmsMedia(item.image_url, item.name)}<button type="button" aria-label="More actions for ${escapeHtml(item.name)}">•••</button><input type="checkbox"></div><div class="cms-media-meta"><strong title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</strong><span>${isCmsVideoUrl(item.image_url) ? 'VIDEO' : 'IMAGE'} · ${escapeHtml(item.category || 'Uncategorized')}</span></div></article>`).join('') || '<p class="cms-media-empty">No matching media found.</p>';
     content.querySelector('[data-media-heading]').textContent = activeCategory;
     content.querySelector('[data-media-count]').textContent = `Showing ${filtered.length} image${filtered.length === 1 ? '' : 's'}`;
   };
@@ -813,6 +866,7 @@ async function loadRealProjects(content) {
   content.innerHTML = `<div class="cms-management-layout"><section class="cms-management-main"><div class="cms-management-heading"><div><span class="cms-section-label">Operations / Project Management</span><h1>Manage Project Templates</h1><p>Loading projects from Supabase…</p></div></div><section class="cms-content-card cms-user-loading"><div class="cms-content-card-icon">✦</div><div><h2>Loading projects</h2><p>Checking the project workspace.</p></div></section></section></div>`;
   if (!client) return;
   const { data, error } = await client.from('cms_projects').select('id,name,category,description,prompt,tags,aspect_ratio,is_premium,access_plan,status,image_url,cloudinary_public_id,updated_at').order('updated_at', { ascending: false });
+  if (window.troveActiveCmsView !== 'project management') return;
   if (error) {
     content.querySelector('.cms-content-card h2').textContent = 'Project database is not connected yet';
     content.querySelector('.cms-content-card p').textContent = `${error.message} Run supabase/008_cms_projects.sql, then reload.`;
@@ -820,7 +874,7 @@ async function loadRealProjects(content) {
   }
   const projects = (data || []).map((project) => ({ ...project, category: normalizeProjectCategory(project.category) }));
   window.troveCmsProjects = projects;
-  const renderApprovedRows = () => projects.map((project) => `<tr><td><input type="checkbox"></td><td><div class="cms-project-name-cell"><img src="${escapeHtml(project.image_url || 'https://framerusercontent.com/images/S1XoYBF0d1PDfj6sBXkfCybfEQ.png?width=1402&height=1122')}" alt=""><strong>${escapeHtml(project.name)}</strong></div></td><td>${escapeHtml(project.category || 'Uncategorized')}</td><td><span class="cms-project-state ${project.status === 'draft' ? 'is-draft' : ''} ${project.status === 'archived' ? 'is-archived' : ''}">${escapeHtml(project.status === 'live' ? 'Live' : project.status === 'archived' ? 'Archived' : 'Draft')}</span></td><td>${new Date(project.updated_at).toLocaleDateString()}</td><td><div class="cms-row-actions"><button type="button" data-project-action="edit" data-project-id="${project.id}" title="Edit project">edit</button><button type="button" data-project-action="duplicate" data-project-id="${project.id}" title="Duplicate project">copy</button><button type="button" data-project-action="archive" data-project-id="${project.id}" title="Archive project">box</button><button class="is-danger" type="button" data-project-action="delete" data-project-id="${project.id}" title="Delete project">delete</button></div></td></tr>`).join('');
+  const renderApprovedRows = () => projects.map((project) => `<tr><td><input type="checkbox"></td><td><div class="cms-project-name-cell">${renderCmsMedia(project.image_url || 'https://framerusercontent.com/images/S1XoYBF0d1PDfj6sBXkfCybfEQ.png?width=1402&height=1122', project.name)}<strong>${escapeHtml(project.name)}</strong></div></td><td>${escapeHtml(project.category || 'Uncategorized')}</td><td><span class="cms-project-state ${project.status === 'draft' ? 'is-draft' : ''} ${project.status === 'archived' ? 'is-archived' : ''}">${escapeHtml(project.status === 'live' ? 'Live' : project.status === 'archived' ? 'Archived' : 'Draft')}</span></td><td>${new Date(project.updated_at).toLocaleDateString()}</td><td><div class="cms-row-actions"><button type="button" data-project-action="edit" data-project-id="${project.id}" title="Edit project">edit</button><button type="button" data-project-action="duplicate" data-project-id="${project.id}" title="Duplicate project">copy</button><button type="button" data-project-action="archive" data-project-id="${project.id}" title="Archive project">box</button><button class="is-danger" type="button" data-project-action="delete" data-project-id="${project.id}" title="Delete project">delete</button></div></td></tr>`).join('');
   content.innerHTML = `<div class="cms-management-layout"><section class="cms-management-main"><div class="cms-management-heading"><h1>Manage Project Templates</h1><div class="cms-management-tools"><label><span>⌕</span><input type="search" placeholder="Search"></label><button type="button">filter</button><button type="button">sort</button><button type="button">view</button></div></div><div class="cms-management-actions"><button class="cms-create-project" data-new-project type="button">Create New Project</button><button class="cms-filter-tags" type="button">Filter Tags⌄</button></div><div class="cms-project-table"><table><thead><tr><th><input type="checkbox"></th><th>Name</th><th>Category</th><th>Status</th><th>Last Updated ↕</th><th>Actions</th></tr></thead><tbody>${renderApprovedRows() || '<tr><td colspan="6">No projects yet. Create your first project.</td></tr>'}</tbody></table><footer><span>New page</span><button disabled>‹|</button><button class="is-current">1</button><button>›</button><button>›|</button></footer></div><div class="cms-management-panels"><section><h2>Content Settings</h2><div class="cms-chip-list"><i>Hero</i><i>Landing Page</i><i>Concept ART</i><i>AI</i><i>AI PROMPT</i><i>STOCK PHOTO</i><i>TEMPLATE</i></div></section><section><h2>Categories</h2><p class="is-selected">All projects</p><p>Templates</p><p>Components</p><p>Sections</p><p>Backgrounds</p><p>Branding</p></section><section><h2>LATEST AGENCY WORK</h2><p>▣ Client: Luxury Stay branding</p><p>▣ Digital Art Series</p><p>▣ Digital Art Series</p></section><section><h2>User Prompts</h2><p>We craft timeless brands and thoughtful experiences.</p><p>We craft timeless brands and thoughtful experiences.</p></section></div></section><aside class="cms-edit-project" data-project-form><header><h2>Edit Project</h2><button data-close-project type="button">×</button></header><form class="cms-project-create-form"><label>Project Name<input name="name" required placeholder="Project name"></label><label>Category<select name="category"><option>Templates, Components</option><option>Website design</option><option>Branding</option></select></label><label>Tags<div class="cms-edit-tags"><i>Hero</i><i>Landing Page</i><i>SaaS</i><i>Agency</i><i>Creative</i><i>Technology</i></div><input name="tags" placeholder="Add tags separated by commas"></label><label class="cms-premium-toggle"><input name="is_premium" type="checkbox"><span>Premium product</span><small>Show a Premium badge in the public library.</small></label><label>Primary Image<input name="image" type="file" accept="image/*,video/*" data-media-file required></label><label>Or paste image/video URL<input name="media_url" type="url" placeholder="https://…"><small>Direct image/video URL; use a video file upload for YouTube or Vimeo.</small></label><label>Short description<textarea name="description" placeholder="A brief description shown on the product page"></textarea></label><label>Prompt<textarea name="prompt" placeholder="Full prompt copied by users"></textarea></label><p class="cms-project-form-status" data-project-status></p><button class="cms-page-action" type="submit">Save project</button></form></aside></div>`;
   return;
   const renderRows = () => projects.map((project) => `<tr><td><input type="checkbox"></td><td><div class="cms-page-cell"><span class="cms-page-icon">▱</span><span><strong>${escapeHtml(project.name)}</strong><small>${escapeHtml(project.description || 'No description')}</small></span></div></td><td>${escapeHtml(project.category || 'Uncategorized')}</td><td><span class="cms-page-status ${project.status === 'draft' ? 'is-draft' : ''}"><i></i>${escapeHtml(project.status || 'draft')}</span></td><td>${new Date(project.updated_at).toLocaleDateString()}</td><td><button class="cms-page-more" type="button">•••</button></td></tr>`).join('');
@@ -864,7 +918,7 @@ function normalizeProjectCategory(category) {
 }
 
 function normalizeProjectAspectRatio(aspectRatio) {
-  return aspectRatio === '9:16' ? '9:16' : '4:3';
+  return aspectRatio === '9:16' ? '9:16' : '16:9';
 }
 
 const projectTagsByCategory = {
@@ -945,7 +999,7 @@ function initializeProjectFormOptions() {
   if (!form || form.dataset.categoryOptionsReady) return;
   if (!form.elements.aspect_ratio) {
     const label = document.createElement('label');
-    label.innerHTML = '<span>Card aspect ratio</span><select name="aspect_ratio"><option value="4:3">4:3 landscape</option><option value="9:16">9:16 portrait</option></select>';
+    label.innerHTML = '<span>Card aspect ratio</span><select name="aspect_ratio"><option value="16:9">16:9 landscape</option><option value="9:16">9:16 portrait</option></select>';
     form.querySelector('[name="category"]')?.closest('label')?.after(label);
   }
   if (!form.elements.access_plan) {
@@ -1004,7 +1058,18 @@ function setProjectImagePreview(form, source, label = 'Current image') {
     return;
   }
   preview.hidden = false;
-  preview.innerHTML = `<img src="${escapeHtml(source)}" alt="${escapeHtml(label)}"><span>${escapeHtml(label)}</span>`;
+  preview.innerHTML = `${renderCmsMedia(source, label)}<span>${escapeHtml(label)}</span>`;
+}
+
+function isCmsVideoUrl(source) {
+  return /\/video\/upload\/|\.(mp4|webm|mov|m3u8|mpd)(?:[?#]|$)/i.test(source || '');
+}
+
+function renderCmsMedia(source, alt = '') {
+  const safeSource = escapeHtml(source);
+  return isCmsVideoUrl(source)
+    ? `<video src="${safeSource}" autoplay loop muted playsinline preload="metadata" aria-label="${escapeHtml(alt)}"></video>`
+    : `<img src="${safeSource}" alt="${escapeHtml(alt)}">`;
 }
 
 document.addEventListener('input', (event) => {

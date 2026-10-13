@@ -63,41 +63,27 @@
   <main>
     <div class="grid-backdrop" aria-hidden="true"></div>
     <aside class="filter-panel" id="filter-panel" aria-label="Portfolio filters">
-      <div class="search-box">
-        <label>Search agents</label>
-        <div class="search-input-wrap"><span aria-hidden="true">⌕</span></div>
-      </div>
-      <section class="filter-section">
-        <h2>Categories</h2>
-        <a class="filter-link" href="../index.html">Templates</a>
-        <a class="filter-link" href="../index.html">Components</a>
-        <a class="filter-link" href="../index.html">Sections</a>
-        <a class="filter-link" href="../index.html">Backgrounds</a>
-        <a class="filter-link" href="../index.html">Branding</a>
-        <a class="filter-link" href="../index.html">Automations</a>
+      <div class="search-box"><label for="sidebar-library-search">Search agents</label><div class="search-input-wrap"><input id="sidebar-library-search" type="search" autocomplete="off"><span aria-hidden="true">&#8981;</span></div></div>
+      <section class="filter-section"><h2>Categories</h2>
+        <a class="filter-link" href="../index.html#portfolio">All projects</a>
+        <a class="filter-link" href="../index.html?category=templates#portfolio">Templates</a>
+        <a class="filter-link" href="../index.html?category=components#portfolio">Components</a>
+        <a class="filter-link" href="../index.html?category=backgrounds#portfolio">Backgrounds</a>
       </section>
-      <section class="filter-section">
-        <h2>Tags</h2>
-        <div class="tag-list">
-          <button type="button">NO-CODE</button><button type="button">UI KIT</button><button type="button">LOGO</button>
-          <button type="button">CONCEPT ART</button><button type="button">AI PROMPT</button><button type="button">STOCK PHOTO</button>
-          <button type="button">TEMPLATE</button><button type="button">PRINT</button>
-        </div>
-      </section>
-      <section class="filter-section agency-work">
-        <h2>Latest agency work</h2>
-        <article><img src="https://framerusercontent.com/images/S1XoYBF0d1PDfj6sBXkfCybfEQ.png?width=1402&height=1122" alt="Luxury stay branding preview"><div><strong>Client: Luxury Stay branding</strong><small>JULY 15, 2026</small></div></article>
-        <article><img src="https://framerusercontent.com/images/qyI8WIzV0dnYvgWN6icaU57A0.png?width=1536&height=1024" alt="Digital art series preview"><div><strong>Digital Art Series</strong><small>JULY 22, 2026</small></div></article>
-      </section>
-      <div class="sidebar-actions"><a href="./index.html">Contact us</a><a class="signin-trigger" href="#signin">Sign in</a></div>
+      <section class="filter-section sidebar-quick-filters"><h2>Quick filters</h2><div>
+        <button type="button" data-sidebar-quick="free">Free</button><button type="button" data-sidebar-quick="premium">Premium</button><button type="button" data-sidebar-quick="popular">Popular</button>
+      </div></section>
+      <section class="filter-section" id="sidebar-tag-section"><h2>Tags</h2><div class="tag-list" id="sidebar-tag-list"></div></section>
+      <section class="filter-section latest-drops"><h2>Latest drops</h2><div id="latest-drops-list"></div></section>
+      <div class="sidebar-actions"><a href="../contact/index.html">Contact us</a><a class="signin-trigger" href="#signin">Sign in</a></div>
     </aside>
 
     <section class="contact-main">
     <section class="contact-intro">
       <span class="eyebrow">Say hello</span>
       <h1>Contact</h1>
-      <p>The fastest way to reach me is <a href="mailto:hello@trovesites.com">email</a> — hello@trovesites.com<br>
-        I usually reply within a day or two. You can also find me on <a href="#instagram">Instagram</a> or <a href="#x">X</a> for a quicker hello.
+      <p>The fastest way to reach us is <a href="mailto:hello@trovesites.com">email</a> — hello@trovesites.com<br>
+        We usually reply within a day or two. You can also find us on <a href="#instagram">Instagram</a> or <a href="#x">X</a> for a quicker hello.
       </p>
     </section>
 
@@ -116,6 +102,7 @@
 <script src="../transitions.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../supabase-client.js"></script>
+<script src="../sidebar-library.js?v=20261013-1"></script>
 <script src="../auth.js?v=20260921-2"></script>
 <script src="../auth-ui.js?v=20260921-16"></script>
 <script src="../signin-modal.js"></script>

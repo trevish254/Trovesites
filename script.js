@@ -11,10 +11,7 @@ let projects = [
 let folders = [
   { name: 'Templates', filter: 'templates', count: 6, images: ['https://framerusercontent.com/images/S1XoYBF0d1PDfj6sBXkfCybfEQ.png?width=1402&height=1122', 'https://framerusercontent.com/images/qyI8WIzV0dnYvgWN6icaU57A0.png?width=1536&height=1024'] },
   { name: 'Components', filter: 'components', count: 4, images: ['https://framerusercontent.com/images/6RtZRPJzwkOvGXbjZVFqSjywlQ.png?width=1567&height=1004', 'https://framerusercontent.com/images/S1XoYBF0d1PDfj6sBXkfCybfEQ.png?width=1402&height=1122'] },
-  { name: 'Sections', filter: 'sections', count: 12, images: ['https://framerusercontent.com/images/qyI8WIzV0dnYvgWN6icaU57A0.png?width=1536&height=1024', 'https://framerusercontent.com/images/6RtZRPJzwkOvGXbjZVFqSjywlQ.png?width=1567&height=1004'] },
-  { name: 'Backgrounds', filter: 'backgrounds', count: 3, images: ['https://framerusercontent.com/images/PmMTtBWdns9q73sBmlgu6h7pB0.png?width=1122&height=1402', 'https://framerusercontent.com/images/GqQks9HafgkRK7rdTAf0oC9JI.png?width=2004&height=2004'] },
-  { name: 'Branding', filter: 'branding', count: 12, images: ['https://framerusercontent.com/images/GqQks9HafgkRK7rdTAf0oC9JI.png?width=2004&height=2004', 'https://framerusercontent.com/images/S1XoYBF0d1PDfj6sBXkfCybfEQ.png?width=1402&height=1122'] },
-  { name: 'Automations', filter: 'automations', count: 9, images: ['https://framerusercontent.com/images/qyI8WIzV0dnYvgWN6icaU57A0.png?width=1536&height=1024', 'https://framerusercontent.com/images/6RtZRPJzwkOvGXbjZVFqSjywlQ.png?width=1567&height=1004'] }
+  { name: 'Backgrounds', filter: 'backgrounds', count: 3, images: ['https://framerusercontent.com/images/PmMTtBWdns9q73sBmlgu6h7pB0.png?width=1122&height=1402', 'https://framerusercontent.com/images/GqQks9HafgkRK7rdTAf0oC9JI.png?width=2004&height=2004'] }
 ];
 
 const grid = document.querySelector('#project-grid');
@@ -23,13 +20,17 @@ const emptyState = document.querySelector('#empty-state');
 const search = document.querySelector('#project-search');
 const archiveSearch = document.querySelector('#archive-search');
 const archiveHeading = document.querySelector('.hero-copy h1');
-let activeFilter = 'all';
-let activeQuickFilter = 'all';
+const libraryParams = new URLSearchParams(window.location.search);
+const requestedQuickFilter = ['free', 'premium', 'popular'].includes(libraryParams.get('quick')) ? libraryParams.get('quick') : 'all';
+let activeFilter = libraryParams.get('category') || libraryParams.get('tag') || 'all';
+let activeQuickFilter = requestedQuickFilter;
+search.value = libraryParams.get('q') || '';
+if (archiveSearch) archiveSearch.value = search.value;
 let currentPlan = 'free';
 const planRank = { free: 0, starter: 1, studio: 2, lifetime: 3 };
 const planLimits = { free: { prompts: 3, components: 5, visits: 3 }, starter: { prompts: 10, components: 15, visits: 7 }, studio: { prompts: Infinity, components: Infinity, visits: Infinity }, lifetime: { prompts: Infinity, components: Infinity, visits: Infinity } };
-const isVideoProject = (project) => /\.(mp4|webm|mov)(?:[?#]|$)/i.test(project.image || '');
-const projectMedia = (project) => isVideoProject(project) ? `<video src="${project.image}" muted playsinline controls preload="metadata"></video>` : `<img src="${project.image}" alt="${project.title}" loading="lazy">`;
+const isVideoProject = (project) => /\/video\/upload\/|\.(mp4|webm|mov|m3u8|mpd)(?:[?#]|$)/i.test(project.image || '');
+const projectMedia = (project) => isVideoProject(project) ? `<video src="${project.image}" autoplay loop muted playsinline preload="metadata"></video>` : `<img src="${project.image}" alt="${project.title}" loading="lazy">`;
 const projectAccessPlan = (project) => project.accessPlan || (project.isPremium ? 'starter' : 'free');
 const canAccessProject = (project) => (planRank[currentPlan] || 0) >= (planRank[projectAccessPlan(project)] || 0);
 const folderProjectMap = { templates: ['templates'], components: ['components'], sections: ['sections'], backgrounds: ['backgrounds'], branding: ['branding'], automations: ['automations'] };
@@ -71,15 +72,33 @@ function renderFolders() {
   folderGrid.innerHTML = folders.map((folder) => `
     <a class="folder-card" href="#portfolio" data-filter="${folder.filter}" aria-label="Open ${folder.name} folder">
       <div class="folder-stack">
-        <div class="folder-paper folder-paper-left"><img src="${folder.images[0]}" alt=""></div>
-        <div class="folder-paper folder-paper-right"><img src="${folder.images[1]}" alt=""></div>
-        <div class="folder-paper folder-paper-front"><img src="${folder.images[0]}" alt="${folder.name} preview"></div>
+        <div class="folder-paper folder-paper-left">${projectMedia({ image: folder.images[0], title: '' })}</div>
+        <div class="folder-paper folder-paper-right">${projectMedia({ image: folder.images[1], title: '' })}</div>
+        <div class="folder-paper folder-paper-front">${projectMedia({ image: folder.images[0], title: `${folder.name} preview` })}</div>
         <span class="folder-badge">${folder.count}</span>
         <span class="folder-clip" aria-hidden="true"></span>
       </div>
       <h2>${folder.name}</h2>
     </a>
   `).join('');
+}
+
+function renderHomeCollections() {
+  const container = document.querySelector('#home-collections');
+  if (!container) return;
+  container.innerHTML = publicFolderConfig.map(([name, filter]) => {
+    const categoryProjects = projects.filter((project) => project.category === filter).slice(0, 9);
+    if (!categoryProjects.length) return '';
+    const cards = categoryProjects.map((project, order) => {
+      const projectIndex = projects.indexOf(project);
+      const locked = !canAccessProject(project);
+      const action = locked ? 'data-upgrade' : `data-copy-prompt="${projectIndex}"`;
+      const actionLabel = locked ? 'Upgrade to access' : `Copy prompt for ${project.title}`;
+      const actionText = locked ? 'Upgrade' : 'Copy prompt';
+      return `<a class="project-card aspect-landscape" href="#project-detail" data-project-index="${projectIndex}" style="--order:${order}"><div class="card-image">${projectMedia(project)}<button class="project-like${project.isLiked ? ' is-liked' : ''}" type="button" data-like-project="${project.id}" aria-label="${project.isLiked ? 'Remove bookmark for' : 'Bookmark'} ${project.title}"><span aria-hidden="true">${project.isLiked ? '&#9829;' : '&#9825;'}</span><b>${project.likeCount || 0}</b></button></div><div class="card-meta">${project.isPremium || projectAccessPlan(project) !== 'free' ? '<span class="premium-badge">Premium</span>' : ''}<h2>${project.title}</h2><button class="copy-prompt" type="button" ${action} aria-label="${actionLabel}" title="${actionLabel}"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2"></rect><path d="M16 8V6a2 2 0 0 0-2 2H6a2 2 0 0 0 2 2v8a2 2 0 0 0 2 2h2"></path></svg><span>${actionText}</span></button></div></a>`;
+    }).join('');
+    return `<section class="home-category"><header><h2>${name}</h2><button type="button" data-filter="${filter}">See all</button></header><div class="home-category-grid">${cards}</div></section>`;
+  }).join('');
 }
 
 function renderProjects() {
@@ -94,9 +113,10 @@ function renderProjects() {
     return matchesFilter && matchesQuickFilter && (!query || project.title.toLowerCase().includes(query) || project.tags.some((tag) => tag.includes(query)));
   });
   if (activeQuickFilter === 'popular') visible = visible.sort((a, b) => (b.likeCount || 0) - (a.likeCount || 0));
+  renderHomeCollections();
   grid.innerHTML = visible.map((project, index) => `
-    <a class="project-card aspect-${project.aspectRatio === '9:16' ? 'portrait' : 'landscape'}" href="#project-detail" data-project-index="${projects.indexOf(project)}" style="--order:${index}">
-      <div class="card-image">${projectMedia(project)}<button class="project-like${project.isLiked ? ' is-liked' : ''}" type="button" data-like-project="${project.id}" aria-label="${project.isLiked ? 'Unlike' : 'Like'} ${project.title}"><span aria-hidden="true">${project.isLiked ? '♥' : '♡'}</span><b>${project.likeCount || 0}</b></button></div>
+    <a class="project-card aspect-landscape" href="#project-detail" data-project-index="${projects.indexOf(project)}" style="--order:${index}">
+      <div class="card-image">${projectMedia(project)}<button class="project-like${project.isLiked ? ' is-liked' : ''}" type="button" data-like-project="${project.id}" aria-label="${project.isLiked ? 'Remove bookmark for' : 'Bookmark'} ${project.title}"><span aria-hidden="true">${project.isLiked ? '♥' : '♡'}</span><b>${project.likeCount || 0}</b></button></div>
       <div class="card-meta">${project.isPremium || projectAccessPlan(project) !== 'free' ? '<span class="premium-badge">Premium</span>' : ''}<h2>${project.title}</h2><button class="copy-prompt" type="button" ${!canAccessProject(project) ? 'data-upgrade' : `data-copy-prompt="${projects.indexOf(project)}"`} aria-label="${!canAccessProject(project) ? 'Upgrade to access' : 'Copy prompt for ' + project.title}" title="${!canAccessProject(project) ? 'Upgrade to access' : 'Copy prompt'}"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2"></rect><path d="M16 8V6a2 2 0 0 0-2 2H6a2 2 0 0 0 2 2v8a2 2 0 0 0 2 2h2"></path></svg><span>${!canAccessProject(project) ? 'Upgrade' : 'Copy prompt'}</span></button></div>
     </a>
   `).join('');
@@ -106,6 +126,8 @@ function renderProjects() {
   const isHome = activeFilter === 'all' && activeQuickFilter === 'all' && !query;
   const quickHeading = { free: 'Free projects', premium: 'Premium projects', popular: 'Popular projects' };
   archiveHeading.textContent = isHome ? 'Portfolio' : (quickHeading[activeQuickFilter] || categoryNames[activeFilter] || activeFilter);
+  document.querySelectorAll('[data-quick-filter]').forEach((item) => item.classList.toggle('is-active', item.dataset.quickFilter === activeQuickFilter));
+  document.querySelectorAll('.filter-panel [data-filter]').forEach((item) => item.classList.toggle('is-active', item.dataset.filter === activeFilter));
   document.querySelector('.archive').classList.remove('is-detail');
   document.querySelector('.hero-copy').hidden = false;
   const tagsForCategory = isHome ? [] : [...new Set([...(categoryTags[activeFilter] || []), ...projects.filter((project) => project.category === activeFilter).flatMap((project) => project.tags || [])])];
@@ -113,6 +135,7 @@ function renderProjects() {
   categoryTagsElement.hidden = isHome;
   document.querySelector('.archive').classList.toggle('is-home', isHome);
   folderGrid.hidden = !isHome;
+  document.querySelector('#home-collections').hidden = !isHome;
   grid.hidden = isHome;
   projectDetail.hidden = true;
   projectDetail.innerHTML = '';
@@ -125,10 +148,10 @@ function renderProjectDetail(project) {
   projectDetail.innerHTML = `
     <button class="detail-back" type="button">← Back to ${categoryNames[activeFilter] || 'Libraries'}</button>
     <div class="detail-layout">
-      <div class="detail-main-card">${projectMedia(project)}</div>
+      <div class="detail-main-card aspect-${project.aspectRatio === '9:16' ? 'portrait' : 'landscape'}">${projectMedia(project)}<button class="project-like${project.isLiked ? ' is-liked' : ''}" type="button" data-like-project="${project.id}" aria-label="${project.isLiked ? 'Remove bookmark for' : 'Bookmark'} ${project.title}"><span aria-hidden="true">${project.isLiked ? '&#9829;' : '&#9825;'}</span><b>${project.likeCount || 0}</b></button></div>
       <aside class="detail-info"><span class="eyebrow">${categoryNames[activeFilter] || 'Project'}</span>${project.isPremium || projectAccessPlan(project) !== 'free' ? '<span class="premium-badge">Premium</span>' : ''}<h2>${project.title}</h2><p>${project.description || 'A considered digital experience built with clarity, character, and a strong visual point of view.'}</p><div class="detail-meta"><span>Category<strong>${categoryNames[activeFilter] || 'Project'}</strong></span><span>Format<strong>Digital design</strong></span></div><button class="detail-contact" type="button" ${locked ? 'data-upgrade' : `data-copy-prompt="${projects.indexOf(project)}"`}>${locked ? 'Upgrade' : 'Copy prompt'}</button></aside>
     </div>
-    <div class="detail-related-grid">${related.map((item) => `<a class="detail-related-card" href="#project-detail" data-project-index="${projects.indexOf(item)}"><img src="${item.image}" alt="${item.title}"><h3>${item.title}</h3></a>`).join('')}</div>`;
+    <div class="detail-related-grid">${related.map((item) => `<a class="detail-related-card" href="#project-detail" data-project-index="${projects.indexOf(item)}">${projectMedia(item)}<h3>${item.title}</h3></a>`).join('')}</div>`;
   document.querySelector('.archive').classList.add('is-detail');
   document.querySelector('.hero-copy').hidden = true;
   categoryTagsElement.hidden = true;
@@ -165,7 +188,7 @@ document.addEventListener('click', (event) => {
     if (project) copyPrompt(project, copyButton);
     return;
   }
-  const projectCard = event.target.closest('.project-card,.detail-related-card');
+  const projectCard = event.target.closest('.project-card,.detail-related-card,.latest-drop');
   if (projectCard) {
     event.preventDefault();
     const project = projects[Number(projectCard.dataset.projectIndex)];
@@ -187,7 +210,7 @@ document.addEventListener('click', (event) => {
   if (quickFilter) {
     event.preventDefault();
     activeQuickFilter = quickFilter.dataset.quickFilter;
-    document.querySelectorAll('[data-quick-filter]').forEach((item) => item.classList.toggle('is-active', item === quickFilter));
+    document.querySelectorAll('[data-quick-filter]').forEach((item) => item.classList.toggle('is-active', item.dataset.quickFilter === activeQuickFilter));
     document.querySelectorAll('.archive-filter-buttons [data-archive-filter]').forEach((item) => item.classList.remove('is-active'));
     renderProjects();
     return;
@@ -362,10 +385,7 @@ async function copyPrompt(project, button) {
 const publicFolderConfig = [
   ['Templates', 'templates'],
   ['Components', 'components'],
-  ['Sections', 'sections'],
-  ['Backgrounds', 'backgrounds'],
-  ['Branding', 'branding'],
-  ['Automations', 'automations']
+  ['Backgrounds', 'backgrounds']
 ];
 
 const normalizePublicCategory = (category) => {
@@ -374,6 +394,38 @@ const normalizePublicCategory = (category) => {
 };
 const normalizePublicTag = (tag) => String(tag || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-');
 const formatPublicTag = (tag) => String(tag || '').trim().replace(/(^|[-\s])([a-z])/g, (_, prefix, letter) => `${prefix}${letter.toUpperCase()}`).replace(/-/g, ' ');
+
+function renderSidebarTags() {
+  const section = document.querySelector('#sidebar-tag-section');
+  const list = document.querySelector('#sidebar-tag-list');
+  if (!section || !list) return;
+
+  const tagCounts = new Map();
+  projects.forEach((project) => {
+    [...new Set(project.tags)].forEach((tag) => tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1));
+  });
+  const topTags = [...tagCounts.entries()]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .slice(0, 10);
+
+  section.hidden = topTags.length === 0;
+  list.innerHTML = topTags.map(([tag]) => `<button type="button" data-filter="${tag}">${formatPublicTag(tag).toUpperCase()}</button>`).join('');
+}
+
+function renderLatestDrops() {
+  const list = document.querySelector('#latest-drops-list');
+  if (!list) return;
+  const section = list.closest('.latest-drops');
+  list.innerHTML = projects.slice(0, 3).map((project) => {
+    const index = projects.indexOf(project);
+    const updated = project.updatedAt ? new Date(project.updatedAt) : null;
+    const date = updated && !Number.isNaN(updated.valueOf())
+      ? updated.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+      : formatPublicTag(project.category);
+    return `<a class="latest-drop" href="#project-detail" data-project-index="${index}" aria-label="Open ${project.title}">${projectMedia(project)}<span><strong>${project.title}</strong><small>${date}</small></span></a>`;
+  }).join('');
+  if (section) section.hidden = projects.length === 0;
+}
 
 async function loadProjectLikes(items = projects) {
   const client = window.troveSupabase;
@@ -406,9 +458,11 @@ async function toggleProjectLike(projectId) {
   }
   const userId = sessionData.session.user.id;
   const wasLiked = Boolean(project.isLiked);
+  const detailWasOpen = !projectDetail.hidden;
   project.isLiked = !wasLiked;
   project.likeCount = Math.max(0, (project.likeCount || 0) + (wasLiked ? -1 : 1));
   renderProjects();
+  if (detailWasOpen) renderProjectDetail(project);
   const result = wasLiked
     ? await client.from('cms_project_likes').delete().eq('project_id', projectId).eq('user_id', userId)
     : await client.from('cms_project_likes').insert({ project_id: projectId, user_id: userId });
@@ -416,6 +470,7 @@ async function toggleProjectLike(projectId) {
     project.isLiked = wasLiked;
     project.likeCount = Math.max(0, (project.likeCount || 0) + (wasLiked ? 1 : -1));
     renderProjects();
+    if (detailWasOpen) renderProjectDetail(project);
     window.alert(result.error.message);
   }
 }
@@ -446,10 +501,11 @@ async function loadPublicProjects() {
       title: project.name,
       category: normalizePublicCategory(project.category),
       tags: (project.tags || []).map(normalizePublicTag).filter(Boolean),
-      aspectRatio: project.aspect_ratio === '9:16' ? '9:16' : '4:3',
+      aspectRatio: project.aspect_ratio === '9:16' ? '9:16' : '16:9',
       isPremium: Boolean(project.is_premium),
       accessPlan: project.access_plan || (project.is_premium ? 'starter' : 'free'),
       image: project.image_url,
+      updatedAt: project.updated_at,
       description: project.description || '',
       prompt: project.prompt || '',
       slug: project.slug
@@ -463,9 +519,21 @@ async function loadPublicProjects() {
       .filter((folder) => folder.count > 0);
     emptyState.textContent = 'No published projects yet.';
   }
+  renderSidebarTags();
+  renderLatestDrops();
   renderFolders();
   renderProjects();
   await loadProjectLikes(projects);
+  const requestedProject = libraryParams.get('project');
+  if (requestedProject) {
+    const project = projects.find((item) => item.slug === requestedProject);
+    if (project) {
+      activeFilter = project.category;
+      renderProjects();
+      renderProjectDetail(project);
+      requestAnimationFrame(() => projectDetail.scrollIntoView({ block: 'start', behavior: 'smooth' }));
+    }
+  }
 }
 
 search.addEventListener('input', () => {

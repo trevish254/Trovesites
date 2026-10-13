@@ -19,7 +19,7 @@
   <script src="../theme-init.js?v=20260921-1"></script>
   <link rel="stylesheet" href="../styles.css?v=20260921-5">
   <link rel="stylesheet" href="../signin-modal.css">
-  <link rel="stylesheet" href="/pricing/pricing.css?v=20260921-4">
+  <link rel="stylesheet" href="/pricing/pricing.css?v=20261013-2">
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-0YX88N3LFR"></script>
   <script>
@@ -59,20 +59,18 @@
   <main>
     <div class="grid-backdrop" aria-hidden="true"></div>
     <aside class="filter-panel" id="filter-panel" aria-label="Portfolio filters">
-      <div class="search-box"><label>Search agents</label><div class="search-input-wrap"><span aria-hidden="true">⌕</span></div></div>
+      <div class="search-box"><label for="sidebar-library-search">Search agents</label><div class="search-input-wrap"><input id="sidebar-library-search" type="search" autocomplete="off"><span aria-hidden="true">&#8981;</span></div></div>
       <section class="filter-section"><h2>Categories</h2>
-        <a class="filter-link" href="../index.html">Templates</a><a class="filter-link" href="../index.html">Components</a>
-        <a class="filter-link" href="../index.html">Sections</a><a class="filter-link" href="../index.html">Backgrounds</a>
-        <a class="filter-link" href="../index.html">Branding</a><a class="filter-link" href="../index.html">Automations</a>
+        <a class="filter-link" href="../index.html#portfolio">All projects</a>
+        <a class="filter-link" href="../index.html?category=templates#portfolio">Templates</a>
+        <a class="filter-link" href="../index.html?category=components#portfolio">Components</a>
+        <a class="filter-link" href="../index.html?category=backgrounds#portfolio">Backgrounds</a>
       </section>
-      <section class="filter-section"><h2>Tags</h2><div class="tag-list">
-        <button type="button">NO-CODE</button><button type="button">UI KIT</button><button type="button">LOGO</button><button type="button">CONCEPT ART</button>
-        <button type="button">AI PROMPT</button><button type="button">STOCK PHOTO</button><button type="button">TEMPLATE</button><button type="button">PRINT</button>
+      <section class="filter-section sidebar-quick-filters"><h2>Quick filters</h2><div>
+        <button type="button" data-sidebar-quick="free">Free</button><button type="button" data-sidebar-quick="premium">Premium</button><button type="button" data-sidebar-quick="popular">Popular</button>
       </div></section>
-      <section class="filter-section agency-work"><h2>Latest agency work</h2>
-        <article><img src="https://framerusercontent.com/images/S1XoYBF0d1PDfj6sBXkfCybfEQ.png?width=1402&height=1122" alt="Luxury stay branding preview"><div><strong>Client: Luxury Stay branding</strong><small>JULY 15, 2026</small></div></article>
-        <article><img src="https://framerusercontent.com/images/qyI8WIzV0dnYvgWN6icaU57A0.png?width=1536&height=1024" alt="Digital art series preview"><div><strong>Digital Art Series</strong><small>JULY 22, 2026</small></div></article>
-      </section>
+      <section class="filter-section" id="sidebar-tag-section"><h2>Tags</h2><div class="tag-list" id="sidebar-tag-list"></div></section>
+      <section class="filter-section latest-drops"><h2>Latest drops</h2><div id="latest-drops-list"></div></section>
       <div class="sidebar-actions"><a href="../contact/index.html">Contact us</a><a class="signin-trigger" href="#signin">Sign in</a></div>
     </aside>
 
@@ -80,15 +78,24 @@
       <div class="pricing-intro">
         <span class="eyebrow">Choose your access</span>
         <h1>Pricing</h1>
-        <p>Premium design assets for building better websites and brands.<br>Pick the access plan that fits how much<br>you want to create.</p>
+        <p>Find your next creative starting point in the Trovesites library.<br>Choose the access that fits how you design, build, and ship<br>better work.</p>
       </div>
 
       <div class="price-list">
-        <article class="price-row"><div class="price-plan"><h2>Starter</h2><a class="plan-action" href="/api/checkout?plan=starter">Get access</a></div><strong>$39<span class="price-term"> / month</span></strong><p>A focused entry point for exploring the Trovesites design library.</p><ul><li>Website prompt library</li><li>Curated background videos</li><li>Essential UI sections</li><li>Starter Figma components</li><li>Personal project use</li></ul></article>
-        <article class="price-row is-featured"><div class="price-plan"><h2>Studio</h2><a class="plan-action" href="/api/checkout?plan=studio">Subscribe</a></div><strong>$99<span class="price-term"> / month</span></strong><p>Full access for creators and teams building polished brand experiences.</p><ul><li>Complete website prompt library</li><li>Premium background video library</li><li>Full UI components library</li><li>Complete Figma component kits</li><li>Commercial brand use</li></ul></article>
-        <article class="price-row"><div class="price-plan"><h2>Lifetime</h2><a class="plan-action" href="/api/checkout?plan=lifetime">Get lifetime access</a></div><strong>$169<span class="price-term"> one time</span></strong><p>A one-time library license for teams that want a lasting design resource.</p><ul><li>Everything in Studio</li><li>Lifetime library access</li><li>Future asset updates</li><li>New prompt and UI drops</li><li>Commercial brand use</li></ul></article>
+        <article class="price-card">
+          <img class="price-card-shape" src="../assets/pricing-card-shape.svg" alt="" aria-hidden="true">
+          <div class="price-card-content"><h2>Starter</h2><div class="price-card-price"><strong>$39</strong><span>/ month</span></div><p>Make Trovesites your daily source of fresh ideas, ready-to-use prompts, and creative momentum.</p><ul><li>Make up to 10 component prompts a day with Trovesites</li><li>Explore up to 3 template prompts each day</li><li>Unlock every premium prompt in the Trovesites library</li><li>Use your finds in personal and client projects</li><li>Get priority help from our team</li></ul><a class="plan-action" href="/api/checkout?plan=starter">Explore Starter</a></div>
+        </article>
+        <article class="price-card is-featured">
+          <img class="price-card-shape" src="../assets/pricing-card-shape.svg" alt="" aria-hidden="true">
+          <div class="price-card-content"><span class="price-card-badge">Most popular</span><h2>Studio</h2><div class="price-card-price"><strong>$99</strong><span>/ year</span></div><p>Your complete creative workspace: explore freely, refine faster, and bring polished ideas to every project.</p><ul><li>Create with component prompts without daily limits</li><li>Explore template prompts without daily limits</li><li>Unlock every premium prompt in the Trovesites library</li><li>Use your finds in personal and client projects</li><li>Get priority help from our team</li></ul><a class="plan-action" href="/api/checkout?plan=studio">Go Studio</a></div>
+        </article>
+        <article class="price-card">
+          <img class="price-card-shape" src="../assets/pricing-card-shape.svg" alt="" aria-hidden="true">
+          <div class="price-card-content"><h2>Lifetime</h2><div class="price-card-price"><strong>$169</strong><span>one time</span></div><p>Make Trovesites part of your toolkit for good, with lasting access to the resources that keep your next idea moving.</p><ul><li>Create with component prompts without daily limits</li><li>Explore template prompts without daily limits</li><li>Unlock every premium prompt in the Trovesites library</li><li>Keep lifetime access to Trovesites resources</li><li>Use your finds in personal and client projects</li><li>Get priority help from our team</li></ul><a class="plan-action" href="/api/checkout?plan=lifetime">Get lifetime access</a></div>
+        </article>
       </div>
-      <a class="pricing-cta" href="../contact/index.html">Get access</a>
+      <a class="pricing-cta" href="../contact/index.html">Find your plan</a>
     </section>
   </main>
 </body>
@@ -96,6 +103,7 @@
 <script src="../mobile-filter.js?v=20260921-1"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../supabase-client.js"></script>
+<script src="../sidebar-library.js?v=20261013-1"></script>
 <script src="../auth.js?v=20260921-2"></script>
 <script src="../auth-ui.js?v=20260921-16"></script>
 <script src="../signin-modal.js"></script>

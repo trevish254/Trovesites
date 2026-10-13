@@ -3,6 +3,11 @@ const products = {
   studio: process.env.DODO_STUDIO_PRODUCT_ID,
   lifetime: process.env.DODO_LIFETIME_PRODUCT_ID,
 };
+const dodoEnvironment = process.env.DODO_PAYMENTS_ENVIRONMENT
+  || (process.env.DODO_PAYMENTS_API_KEY?.startsWith('dodo_live_') ? 'live_mode' : 'test_mode');
+const dodoBaseUrl = dodoEnvironment === 'live_mode'
+  ? 'https://live.dodopayments.com'
+  : 'https://test.dodopayments.com';
 
 function sendJson(res, status, body) {
   res.status(status).setHeader('Content-Type', 'application/json');
@@ -43,7 +48,7 @@ module.exports = async function checkout(req, res) {
   if (!user?.id) return sendJson(res, 401, { error: 'Sign in before choosing a plan' });
 
   const origin = process.env.SITE_ORIGIN || 'https://trovesites.vercel.app';
-  const response = await fetch('https://test.dodopayments.com/checkouts', {
+  const response = await fetch(`${dodoBaseUrl}/checkouts`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${process.env.DODO_PAYMENTS_API_KEY}`,

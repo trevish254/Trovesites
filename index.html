@@ -22,7 +22,7 @@
   <title>Trovesites — Creative studio portfolio</title>
   <link rel="preconnect" href="https://framerusercontent.com">
   <script src="theme-init.js?v=20260921-1"></script>
-  <link rel="stylesheet" href="styles.css?v=20260921-4">
+  <link rel="stylesheet" href="styles.css?v=20261013-5">
   <link rel="stylesheet" href="signin-modal.css">
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-0YX88N3LFR"></script>
@@ -90,28 +90,23 @@
         <button class="filter-link is-active" type="button" data-filter="all">All projects</button>
         <button class="filter-link" type="button" data-filter="templates">Templates</button>
         <button class="filter-link" type="button" data-filter="components">Components</button>
-        <button class="filter-link" type="button" data-filter="sections">Sections</button>
         <button class="filter-link" type="button" data-filter="backgrounds">Backgrounds</button>
-        <button class="filter-link" type="button" data-filter="branding">Branding</button>
-        <button class="filter-link" type="button" data-filter="automations">Automations</button>
       </section>
-      <section class="filter-section">
-        <h2>Tags</h2>
-        <div class="tag-list">
-          <button type="button" data-filter="no-code">NO-CODE</button>
-          <button type="button" data-filter="ui-kit">UI KIT</button>
-          <button type="button" data-filter="logo">LOGO</button>
-          <button type="button" data-filter="concept-art">CONCEPT ART</button>
-          <button type="button" data-filter="ai-prompt">AI PROMPT</button>
-          <button type="button" data-filter="stock-photo">STOCK PHOTO</button>
-          <button type="button" data-filter="template">TEMPLATE</button>
-          <button type="button" data-filter="print">PRINT</button>
+      <section class="filter-section sidebar-quick-filters">
+        <h2>Quick filters</h2>
+        <div>
+          <button type="button" data-quick-filter="free">Free</button>
+          <button type="button" data-quick-filter="premium">Premium</button>
+          <button type="button" data-quick-filter="popular">Popular</button>
         </div>
       </section>
-      <section class="filter-section agency-work">
-        <h2>Latest agency work</h2>
-        <article><img src="https://framerusercontent.com/images/S1XoYBF0d1PDfj6sBXkfCybfEQ.png?width=1402&height=1122" alt="Luxury stay branding preview"><div><strong>Client: Luxury Stay branding</strong><small>JULY 15, 2026</small></div></article>
-        <article><img src="https://framerusercontent.com/images/qyI8WIzV0dnYvgWN6icaU57A0.png?width=1536&height=1024" alt="Digital art series preview"><div><strong>Digital Art Series</strong><small>JULY 22, 2026</small></div></article>
+      <section class="filter-section" id="sidebar-tag-section">
+        <h2>Tags</h2>
+        <div class="tag-list" id="sidebar-tag-list"></div>
+      </section>
+      <section class="filter-section latest-drops">
+        <h2>Latest drops</h2>
+        <div id="latest-drops-list"></div>
       </section>
       <div class="sidebar-actions"><a href="contact/index.html">Contact us</a><a class="signin-trigger" href="#signin">Sign in</a></div>
     </aside>
@@ -135,6 +130,7 @@
       </div>
       <div class="category-tags" id="category-tags" aria-label="Category tags"></div>
       <div class="folder-grid" id="folder-grid" aria-label="Portfolio categories"></div>
+      <div class="home-collections" id="home-collections" hidden></div>
       <div class="project-grid" id="project-grid" aria-live="polite"></div>
       <section class="project-detail" id="project-detail" hidden aria-live="polite"></section>
       <p class="empty-state" id="empty-state" hidden>No projects match that search.</p>
@@ -145,7 +141,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-client.js"></script>
   <script src="auth.js?v=20260921-1"></script>
-  <script src="script.js?v=20260921-9"></script>
+  <script src="script.js?v=20261013-9"></script>
   <script src="mobile-filter.js?v=20260921-1"></script>
   <script src="transitions.js"></script>
   <script src="signin-modal.js"></script>

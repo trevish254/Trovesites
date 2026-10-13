@@ -10,7 +10,7 @@ create table if not exists public.cms_projects (
   description text not null default '',
   prompt text not null default '',
   tags text[] not null default '{}',
-  aspect_ratio text not null default '4:3' check (aspect_ratio in ('4:3', '9:16')),
+  aspect_ratio text not null default '16:9' check (aspect_ratio in ('16:9', '9:16')),
   is_premium boolean not null default false,
   status text not null default 'draft' check (status in ('draft', 'live', 'archived')),
   image_url text,

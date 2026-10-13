@@ -47,6 +47,7 @@ const clearLoginForm = () => {
 };
 
 const showDashboard = (user) => {
+  if (dashboard && !dashboard.hidden && dashboard.classList.contains('cms-dashboard-shell')) return;
   if (window.renderCmsUi) {
     if (authPanel) authPanel.hidden = true;
     window.renderCmsUi(dashboard, user);
@@ -207,6 +208,6 @@ authClient.auth.getSession().then(({ data }) => {
 });
 
 authClient.auth.onAuthStateChange((event, session) => {
-  if (session?.user) enterWorkspace(session.user);
+  if (event === 'SIGNED_IN' && session?.user && dashboard?.hidden) enterWorkspace(session.user);
   else if (sessionBooted && event === 'SIGNED_OUT') showLogin();
 });
