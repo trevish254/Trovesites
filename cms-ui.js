@@ -244,6 +244,11 @@ document.addEventListener('click', (event) => {
     return;
   }
   if (view === 'billing') {
+    renderCmsBilling(content);
+    loadCmsBilling(content);
+    return;
+  }
+  if (view === 'billing legacy') {
     const invoices = [['INV-2026-09', 'September 2026', '$49.00', 'Paid'], ['INV-2026-08', 'August 2026', '$49.00', 'Paid'], ['INV-2026-07', 'July 2026', '$49.00', 'Paid'], ['INV-2026-06', 'June 2026', '$49.00', 'Paid']];
     content.innerHTML = `<div class="cms-billing-page"><div class="cms-billing-heading"><div><span class="cms-section-label">Administration / Billing</span><h1>Billing & subscription</h1><p>Manage your plan, payment details, and workspace invoices.</p></div><button class="cms-page-action" type="button">Manage plan</button></div><section class="cms-billing-summary"><article><span>Current plan</span><strong>Studio</strong><small>Renews October 1, 2026</small></article><article><span>Monthly total</span><strong>$49</strong><small>USD / month</small></article><article><span>Team members</span><strong>18 / 25</strong><small>7 seats available</small></article><article><span>Next payment</span><strong>$49.00</strong><small class="positive">Scheduled</small></article></section><div class="cms-billing-grid"><section class="cms-plan-card"><header><div><span class="cms-section-label">Your subscription</span><h2>Studio plan</h2><p>Everything you need to manage and grow your creative workspace.</p></div><span class="cms-plan-badge">Active</span></header><div class="cms-plan-price"><strong>$49</strong><span>/ month</span></div><div class="cms-plan-features"><p><i>✓</i> Up to 25 team members</p><p><i>✓</i> Unlimited projects and media</p><p><i>✓</i> Advanced access controls</p><p><i>✓</i> Priority support</p></div><div class="cms-plan-actions"><button class="cms-page-action" type="button">Change plan</button><button class="cms-outline-action" type="button">Cancel subscription</button></div></section><section class="cms-usage-card"><header><div><h2>Workspace usage</h2><span>Current billing period</span></div><button type="button">View details</button></header><div class="cms-usage-row"><div><span>Team members</span><b>18 of 25</b></div><i><em style="width:72%"></em></i></div><div class="cms-usage-row"><div><span>Storage</span><b>68 GB of 100 GB</b></div><i><em style="width:68%"></em></i></div><div class="cms-usage-row"><div><span>Projects</span><b>42 of unlimited</b></div><i><em style="width:34%"></em></i></div><div class="cms-usage-note"><span>✦</span><p>Your workspace is running smoothly. You have room for 7 more team members.</p></div></section></div><section class="cms-payment-invoices"><section class="cms-payment-card"><header><h2>Payment method</h2><button type="button">Edit</button></header><div class="cms-payment-method"><span class="cms-card-brand">VISA</span><div><strong>•••• 4242</strong><small>Expires 08 / 2028</small></div><span class="cms-payment-default">Default</span></div><button class="cms-add-payment" type="button">＋ Add payment method</button></section><section class="cms-invoices-card"><header><div><h2>Recent invoices</h2><span>Download your billing history</span></div><button type="button">View all</button></header><table><thead><tr><th>Invoice</th><th>Date</th><th>Amount</th><th>Status</th><th></th></tr></thead><tbody>${invoices.map(([id, date, amount, status]) => `<tr><td>${id}</td><td>${date}</td><td>${amount}</td><td><span class="cms-invoice-status">${status}</span></td><td><button class="cms-download-invoice" type="button">↓</button></td></tr>`).join('')}</tbody></table></section></section></div>`;
     return;
@@ -458,6 +463,52 @@ async function loadDashboardSummary() {
     note.className = index === 4 ? '' : 'positive';
     note.textContent = index === 4 ? 'Loading Dodo payments' : `▲ ${summary[index][2]}`;
   });
+}
+
+function renderCmsBilling(content) {
+  content.innerHTML = `<div class="cms-admin-billing"><header class="cms-admin-billing-head"><div><span class="cms-section-label">Administration / Billing</span><h1>Revenue & subscriptions</h1><p>A live view of the plans, renewals, and payments supporting Trovesites.</p></div><button class="cms-page-action" type="button" data-billing-refresh>Refresh</button></header><section class="cms-admin-billing-metrics"><article><span>Monthly recurring revenue</span><strong data-billing-mrr>—</strong><small>Active recurring subscriptions</small></article><article><span>Active subscribers</span><strong data-billing-active>—</strong><small>Loading verified subscriptions</small></article><article><span>Renewal watch</span><strong data-billing-watch>—</strong><small>Set to cancel at period end</small></article><article><span>Payments this month</span><strong data-billing-payments>—</strong><small>Loading Dodo payments</small></article></section><section class="cms-admin-billing-grid"><article class="cms-admin-billing-card cms-admin-revenue"><header><div><h2>Revenue pulse</h2><span>Last six months of recorded invoices</span></div><span class="cms-billing-live">● Live</span></header><div class="cms-billing-chart" data-billing-chart><p>Loading payment history…</p></div></article><article class="cms-admin-billing-card"><header><div><h2>Plan mix</h2><span>Active subscribers by plan</span></div></header><div class="cms-plan-mix" data-billing-plans><p>Loading plans…</p></div></article></section><section class="cms-admin-billing-card cms-billing-directory"><header><div><h2>Subscriber activity</h2><span data-billing-directory-note>Loading current subscriptions…</span></div></header><div class="cms-billing-table"><table><thead><tr><th>Plan</th><th>Status</th><th>Billing</th><th>Next renewal</th><th>Amount</th></tr></thead><tbody data-billing-subscribers><tr><td colspan="5">Loading secure billing data…</td></tr></tbody></table></div></section><section class="cms-admin-billing-card cms-billing-invoice-card"><header><div><h2>Recent payments</h2><span>Synced invoice records</span></div></header><div class="cms-billing-table"><table><thead><tr><th>Invoice</th><th>Date</th><th>Amount</th><th>Status</th></tr></thead><tbody data-billing-invoices><tr><td colspan="4">Loading payment records…</td></tr></tbody></table></div></section></div>`;
+  content.querySelector('[data-billing-refresh]')?.addEventListener('click', () => loadCmsBilling(content));
+}
+
+function billingMoney(value, currency = 'USD') {
+  const amount = Number(value || 0);
+  try { return new Intl.NumberFormat(undefined, { style: 'currency', currency: String(currency || 'USD').toUpperCase() }).format(amount); } catch { return `${amount.toFixed(2)} ${currency}`; }
+}
+
+async function loadCmsBilling(content) {
+  const client = window.troveSupabase;
+  if (!client || window.troveActiveCmsView !== 'billing') return;
+  try {
+    const { data: sessionData } = await client.auth.getSession();
+    const token = sessionData.session?.access_token;
+    if (!token) throw new Error('Sign in again to view billing analytics.');
+    const [overviewResponse, revenueResponse] = await Promise.all([fetch('/api/admin/billing-overview', { headers: { Authorization: `Bearer ${token}` } }), fetch('/api/admin/revenue', { headers: { Authorization: `Bearer ${token}` } })]);
+    const overview = await overviewResponse.json().catch(() => ({}));
+    const revenue = await revenueResponse.json().catch(() => ({}));
+    if (!overviewResponse.ok) throw new Error(overview.error || 'Billing analytics are unavailable.');
+    if (window.troveActiveCmsView !== 'billing') return;
+    const subscriptions = overview.subscriptions || [];
+    const invoices = overview.invoices || [];
+    const active = subscriptions.filter((item) => ['active', 'trialing'].includes(String(item.status).toLowerCase()));
+    const cancellers = active.filter((item) => item.cancel_at_period_end);
+    const currencies = [...new Set(active.map((item) => item.currency || 'USD'))];
+    const mrr = currencies.map((currency) => [currency, active.filter((item) => (item.currency || 'USD') === currency && String(item.plan).toLowerCase() !== 'lifetime').reduce((sum, item) => sum + Number(item.amount || 0), 0)]).filter(([, amount]) => amount);
+    content.querySelector('[data-billing-mrr]').textContent = mrr.length === 1 ? billingMoney(mrr[0][1], mrr[0][0]) : mrr.length ? `${mrr.length} currencies` : '$0.00';
+    content.querySelector('[data-billing-active]').textContent = String(active.length);
+    content.querySelector('[data-billing-watch]').textContent = String(cancellers.length);
+    const paymentCount = revenueResponse.ok ? Number(revenue.payment_count || 0) : 0;
+    content.querySelector('[data-billing-payments]').textContent = String(paymentCount);
+    const plans = active.reduce((map, item) => { const key = item.plan || 'Paid'; map[key] = (map[key] || 0) + 1; return map; }, {});
+    const maxPlan = Math.max(...Object.values(plans), 1);
+    content.querySelector('[data-billing-plans]').innerHTML = Object.entries(plans).length ? Object.entries(plans).sort((a, b) => b[1] - a[1]).map(([plan, count]) => `<p><span>${escapeHtml(plan)}</span><b>${count}</b><i><em style="width:${Math.round(count / maxPlan * 100)}%"></em></i></p>`).join('') : '<p class="cms-billing-empty">No active subscriptions yet.</p>';
+    const months = Array.from({ length: 6 }, (_, index) => { const date = new Date(); date.setMonth(date.getMonth() - (5 - index), 1); return date; });
+    const monthly = months.map((date) => ({ label: date.toLocaleDateString(undefined, { month: 'short' }), total: invoices.filter((invoice) => { const issued = new Date(invoice.issued_at || invoice.created_at); return issued.getFullYear() === date.getFullYear() && issued.getMonth() === date.getMonth(); }).reduce((sum, invoice) => sum + Number(invoice.amount || 0), 0) }));
+    const peak = Math.max(...monthly.map((item) => item.total), 1);
+    content.querySelector('[data-billing-chart]').innerHTML = `<div class="cms-billing-bars">${monthly.map((item) => `<span><i style="height:${Math.max(6, Math.round(item.total / peak * 100))}%"></i><b>${escapeHtml(item.label)}</b></span>`).join('')}</div>`;
+    content.querySelector('[data-billing-directory-note]').textContent = `${subscriptions.length} synced subscriber${subscriptions.length === 1 ? '' : 's'}`;
+    content.querySelector('[data-billing-subscribers]').innerHTML = subscriptions.length ? subscriptions.slice(0, 8).map((item) => `<tr><td><strong>${escapeHtml(item.plan || 'Paid')}</strong></td><td><span class="cms-billing-status ${['active', 'trialing'].includes(String(item.status).toLowerCase()) ? '' : 'is-muted'}">${escapeHtml(item.status || 'Unknown')}</span></td><td>${escapeHtml(item.interval || '—')}</td><td>${item.current_period_end ? new Date(item.current_period_end).toLocaleDateString() : '—'}</td><td>${billingMoney(item.amount, item.currency)}</td></tr>`).join('') : '<tr><td colspan="5">No subscription records have been synced yet.</td></tr>';
+    content.querySelector('[data-billing-invoices]').innerHTML = invoices.length ? invoices.slice(0, 6).map((item) => `<tr><td>${escapeHtml(item.dodo_invoice_id || '—')}</td><td>${item.issued_at ? new Date(item.issued_at).toLocaleDateString() : '—'}</td><td>${billingMoney(item.amount, item.currency)}</td><td>${escapeHtml(item.status || 'Recorded')}</td></tr>`).join('') : '<tr><td colspan="4">No invoice records have been synced yet.</td></tr>';
+  } catch (error) { const target = content.querySelector('[data-billing-subscribers]'); if (target) target.innerHTML = `<tr><td colspan="5">${escapeHtml(error.message || 'Unable to load billing analytics.')}</td></tr>`; }
 }
 
 async function loadDashboardRevenue() {
