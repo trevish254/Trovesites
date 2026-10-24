@@ -5,7 +5,7 @@ signInModal.innerHTML = `
   <div class="signin-modal-backdrop" data-signin-close></div>
   <section class="signin-modal-card" role="dialog" aria-modal="true" aria-labelledby="signin-title">
     <button class="signin-modal-close" type="button" aria-label="Close sign in" data-signin-close>×</button>
-    <div class="signin-modal-mark">✦</div>
+    <div class="signin-modal-mark"><img alt="Trovesites"></div>
     <h2 id="signin-title">Step back in!</h2>
     <p class="signin-modal-subtitle">Log in to continue your mindful exercises, calm routines, and wellness pathway</p>
     <form class="signin-modal-form">
@@ -19,6 +19,12 @@ signInModal.innerHTML = `
     </form>
   </section>`;
 document.body.append(signInModal);
+
+// Reuse the navigation logo's resolved URL so this works from the home page,
+// nested pages, and preview environments with a non-root base path.
+const navigationLogo = document.querySelector('.identity img');
+const modalLogo = signInModal.querySelector('.signin-modal-mark img');
+if (navigationLogo && modalLogo) modalLogo.src = navigationLogo.currentSrc || navigationLogo.src;
 
 const closeSignIn = () => { signInModal.classList.remove('is-open'); signInModal.setAttribute('aria-hidden', 'true'); document.body.classList.remove('signin-modal-open'); };
 window.addEventListener('trove-auth-signed-in', closeSignIn);
