@@ -482,9 +482,8 @@ async function loadCmsBilling(content) {
     const { data: sessionData } = await client.auth.getSession();
     const token = sessionData.session?.access_token;
     if (!token) throw new Error('Sign in again to view billing analytics.');
-    const [overviewResponse, revenueResponse] = await Promise.all([fetch('/api/admin/billing-overview', { headers: { Authorization: `Bearer ${token}` } }), fetch('/api/admin/revenue', { headers: { Authorization: `Bearer ${token}` } })]);
+    const overviewResponse = await fetch('/api/admin/billing-overview', { headers: { Authorization: `Bearer ${token}` } });
     const overview = await overviewResponse.json().catch(() => ({}));
-    const revenue = await revenueResponse.json().catch(() => ({}));
     if (!overviewResponse.ok) throw new Error(overview.error || 'Billing analytics are unavailable.');
     if (window.troveActiveCmsView !== 'billing') return;
     const subscriptions = overview.subscriptions || [];
@@ -496,8 +495,7 @@ async function loadCmsBilling(content) {
     content.querySelector('[data-billing-mrr]').textContent = mrr.length === 1 ? billingMoney(mrr[0][1], mrr[0][0]) : mrr.length ? `${mrr.length} currencies` : '$0.00';
     content.querySelector('[data-billing-active]').textContent = String(active.length);
     content.querySelector('[data-billing-watch]').textContent = String(cancellers.length);
-    const paymentCount = revenueResponse.ok ? Number(revenue.payment_count || 0) : 0;
-    content.querySelector('[data-billing-payments]').textContent = String(paymentCount);
+    content.querySelector('[data-billing-payments]').textContent = '…';
     const plans = active.reduce((map, item) => { const key = item.plan || 'Paid'; map[key] = (map[key] || 0) + 1; return map; }, {});
     const maxPlan = Math.max(...Object.values(plans), 1);
     content.querySelector('[data-billing-plans]').innerHTML = Object.entries(plans).length ? Object.entries(plans).sort((a, b) => b[1] - a[1]).map(([plan, count]) => `<p><span>${escapeHtml(plan)}</span><b>${count}</b><i><em style="width:${Math.round(count / maxPlan * 100)}%"></em></i></p>`).join('') : '<p class="cms-billing-empty">No active subscriptions yet.</p>';
@@ -508,6 +506,7 @@ async function loadCmsBilling(content) {
     content.querySelector('[data-billing-directory-note]').textContent = `${subscriptions.length} synced subscriber${subscriptions.length === 1 ? '' : 's'}`;
     content.querySelector('[data-billing-subscribers]').innerHTML = subscriptions.length ? subscriptions.slice(0, 8).map((item) => `<tr><td><strong>${escapeHtml(item.plan || 'Paid')}</strong></td><td><span class="cms-billing-status ${['active', 'trialing'].includes(String(item.status).toLowerCase()) ? '' : 'is-muted'}">${escapeHtml(item.status || 'Unknown')}</span></td><td>${escapeHtml(item.interval || '—')}</td><td>${item.current_period_end ? new Date(item.current_period_end).toLocaleDateString() : '—'}</td><td>${billingMoney(item.amount, item.currency)}</td></tr>`).join('') : '<tr><td colspan="5">No subscription records have been synced yet.</td></tr>';
     content.querySelector('[data-billing-invoices]').innerHTML = invoices.length ? invoices.slice(0, 6).map((item) => `<tr><td>${escapeHtml(item.dodo_invoice_id || '—')}</td><td>${item.issued_at ? new Date(item.issued_at).toLocaleDateString() : '—'}</td><td>${billingMoney(item.amount, item.currency)}</td><td>${escapeHtml(item.status || 'Recorded')}</td></tr>`).join('') : '<tr><td colspan="4">No invoice records have been synced yet.</td></tr>';
+    fetch('/api/admin/revenue', { headers: { Authorization: `Bearer ${token}` } }).then((response) => response.json().then((data) => ({ response, data }))).then(({ response, data }) => { const metric = content.querySelector('[data-billing-payments]'); if (metric && window.troveActiveCmsView === 'billing') metric.textContent = response.ok ? String(Number(data.payment_count || 0)) : 'Unavailable'; }).catch(() => { const metric = content.querySelector('[data-billing-payments]'); if (metric) metric.textContent = 'Unavailable'; });
   } catch (error) { const target = content.querySelector('[data-billing-subscribers]'); if (target) target.innerHTML = `<tr><td colspan="5">${escapeHtml(error.message || 'Unable to load billing analytics.')}</td></tr>`; }
 }
 

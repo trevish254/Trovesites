@@ -41,12 +41,13 @@ module.exports = async function billingOverview(req, res) {
       fetch(`${supabaseUrl}/rest/v1/billing_subscriptions?select=plan,status,amount,currency,interval,current_period_end,cancel_at_period_end,created_at,updated_at&order=updated_at.desc&limit=500`, { headers }),
       fetch(`${supabaseUrl}/rest/v1/billing_invoices?select=dodo_invoice_id,amount,currency,status,issued_at,created_at&order=issued_at.desc.nullslast&limit=50`, { headers }),
     ]);
-    if (!subscriptionsResponse.ok || !invoicesResponse.ok) {
-      console.error('Billing analytics read failed', subscriptionsResponse.status, invoicesResponse.status);
+    if (!subscriptionsResponse.ok) {
+      console.error('Billing subscription read failed', subscriptionsResponse.status);
       return sendJson(res, 502, { error: 'Unable to load billing analytics' });
     }
-
-    const [subscriptions, invoices] = await Promise.all([subscriptionsResponse.json(), invoicesResponse.json()]);
+    const subscriptions = await subscriptionsResponse.json();
+    const invoices = invoicesResponse.ok ? await invoicesResponse.json() : [];
+    if (!invoicesResponse.ok) console.warn('Billing invoice read unavailable', invoicesResponse.status);
     return sendJson(res, 200, {
       subscriptions: Array.isArray(subscriptions) ? subscriptions : [],
       invoices: Array.isArray(invoices) ? invoices : [],
