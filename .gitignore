@@ -8,3 +8,5 @@ tools/ngrok/
 !.env.example
 
 .env*
+.dev-server*.log
+.ngrok*.log
